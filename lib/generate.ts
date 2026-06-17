@@ -53,9 +53,11 @@ function explainError(error: unknown): string {
   return `Failed to generate document: ${e instanceof Error ? e.message : String(error)}`;
 }
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 /** Render the selected template with the given data and return the filled .docx as a Blob. */
 export async function renderDocxBlob(id: TemplateId, data: ResumeData): Promise<Blob> {
-  const res = await fetch(`/templates/${id}.docx`);
+  const res = await fetch(`${BASE}/templates/${id}.docx`);
   if (!res.ok) throw new Error(`Could not load template "${id}.docx" (HTTP ${res.status}).`);
   const buffer = await res.arrayBuffer();
 

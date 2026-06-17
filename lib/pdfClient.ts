@@ -2,6 +2,8 @@ import { saveAs } from "file-saver";
 import type { ResumeData, TemplateId } from "./schemas";
 import { buildResumePdf, type PdfAssets } from "./pdf";
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 let assetsPromise: Promise<PdfAssets> | null = null;
 
 async function fetchBytes(url: string): Promise<Uint8Array> {
@@ -13,10 +15,10 @@ async function fetchBytes(url: string): Promise<Uint8Array> {
 function loadAssets(): Promise<PdfAssets> {
   assetsPromise ??= (async () => {
     const [lexendLight, lexend, lexendMedium, logoPng] = await Promise.all([
-      fetchBytes("/fonts/LexendLight-regular.ttf"),
-      fetchBytes("/fonts/Lexend-regular.ttf"),
-      fetchBytes("/fonts/LexendMedium-regular.ttf"),
-      fetchBytes("/img/logo.png"),
+      fetchBytes(`${BASE}/fonts/LexendLight-regular.ttf`),
+      fetchBytes(`${BASE}/fonts/Lexend-regular.ttf`),
+      fetchBytes(`${BASE}/fonts/LexendMedium-regular.ttf`),
+      fetchBytes(`${BASE}/img/logo.png`),
     ]);
     return { lexendLight, lexend, lexendMedium, logoPng };
   })().catch((e) => {
