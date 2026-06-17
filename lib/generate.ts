@@ -1,0 +1,82 @@
+import PizZip from "pizzip";
+import Docxtemplater from "docxtemplater";
+import { saveAs } from "file-saver";
+import type { ExternalResume, InternalResume, ResumeData, TemplateId } from "./schemas";
+
+/** Map the validated form data onto the tag names used inside the .docx templates
+ *  (arrays of strings become comma-joined text where the template shows inline lists,
+ *  and projects get their display number). */
+function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> {
+  if (id === "external") {
+    const d = data as ExternalResume;
+    return {
+      ...d,
+      skills: d.skills.join(", "),
+      toolsAndCertifications: d.toolsAndCertifications.join(", "),
+      projects: d.projects.map((p, i) => ({ ...p, number: i + 1 })),
+    };
+  }
+  const d = data as InternalResume;
+  return {
+    ...d,
+    tools: d.tools.join(", "),
+    projects: d.projects.map((p, i) => ({
+      ...p,
+      number: i + 1,
+      toolsAndTechnologies: p.toolsAndTechnologies.join(", "),
+    })),
+  };
+}
+
+interface DocxTemplaterError extends Error {
+  properties?: {
+    errors?: Array<{
+      properties?: { explanation?: string; id?: string; xtag?: string };
+      message?: string;
+    }>;
+    explanation?: string;
+  };
+}
+
+function explainError(error: unknown): string {
+  const e = error as DocxTemplaterError;
+  const subErrors = e?.properties?.errors;
+  if (Array.isArray(subErrors) && subErrors.length > 0) {
+    const lines = subErrors.map((sub) => {
+      const p = sub.properties ?? {};
+      const tag = p.xtag ? ` (tag: {${p.xtag}})` : "";
+      return `• ${p.explanation ?? sub.message ?? "unknown template error"}${tag}`;
+    });
+    return `Template rendering failed:\n${lines.join("\n")}`;
+  }
+  if (e?.properties?.explanation) return `Template rendering failed: ${e.properties.explanation}`;
+  return `Failed to generate document: ${e instanceof Error ? e.message : String(error)}`;
+}
+
+/** Render the selected template with the given data and return the filled .docx as a Blob. */
+export async function renderDocxBlob(id: TemplateId, data: ResumeData): Promise<Blob> {
+  const res = await fetch(`/templates/${id}.docx`);
+  if (!res.ok) throw new Error(`Could not load template "${id}.docx" (HTTP ${res.status}).`);
+  const buffer = await res.arrayBuffer();
+
+  let doc: Docxtemplater;
+  try {
+    doc = new Docxtemplater(new PizZip(buffer), {
+      paragraphLoop: true,
+      linebreaks: true,
+    });
+    doc.render(prepareData(id, data));
+  } catch (error) {
+    throw new Error(explainError(error));
+  }
+
+  return doc.getZip().generate({
+    type: "blob",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    compression: "DEFLATE",
+  });
+}
+
+export async function generateDocx(id: TemplateId, data: ResumeData, fileName: string): Promise<void> {
+  saveAs(await renderDocxBlob(id, data), fileName);
+}
