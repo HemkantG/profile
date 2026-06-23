@@ -50,11 +50,15 @@ const internal = {
   languages: ["English", "Hindi"],
 };
 
-for (const [id, data] of [["external", external], ["internal", internal]]) {
+// mirror prepareData: the internal template hides its "Projects" heading via {#hasProjects}
+const prep = (id, data) =>
+  id === "internal" ? { ...data, hasProjects: data.projects.length > 0 } : data;
+
+function render(id, data) {
   const zip = new PizZip(fs.readFileSync(`public/templates/${id}.docx`));
   const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
   try {
-    doc.render(data);
+    doc.render(prep(id, data));
   } catch (e) {
     console.error(`${id}: RENDER FAILED`);
     console.error(JSON.stringify(e.properties?.errors?.map((x) => x.properties) ?? e.message, null, 2));
@@ -62,8 +66,25 @@ for (const [id, data] of [["external", external], ["internal", internal]]) {
   }
   const xml = doc.getZip().file("word/document.xml").asText();
   const leftover = xml.replace(/<[^>]+>/g, "").match(/\{[^}]*\}/g);
-  console.log(`${id}: rendered OK, leftover tags: ${leftover ?? "none"}`);
-  // sanity: well-formed XML
+  if (leftover) {
+    console.error(`${id}: leftover tags: ${leftover}`);
+    process.exit(1);
+  }
   fs.writeFileSync(`/tmp/out-${id}.docx`, doc.getZip().generate({ type: "nodebuffer" }));
+  return xml.replace(/<[^>]+>/g, "");
 }
+
+for (const [id, data] of [["external", external], ["internal", internal]]) {
+  render(id, data);
+  console.log(`${id}: rendered OK, leftover tags: none`);
+}
+
+// empty-projects case: the internal "Projects" heading must be fully omitted
+const internalText = render("internal", { ...internal, projects: [] });
+if (/Projects/.test(internalText)) {
+  console.error("internal(empty projects): 'Projects' heading should be omitted but was found");
+  process.exit(1);
+}
+render("external", { ...external, projects: [] }); // must still render (shared Projects/Experience heading)
+console.log("empty-projects: internal heading omitted, external OK");
 console.log("done");

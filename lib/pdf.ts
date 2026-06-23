@@ -340,24 +340,26 @@ function renderInternal(doc: Doc, fonts: Fonts, logo: PDFImage, d: InternalResum
     body(left, fonts, edu.qualification);
   }
 
-  sectionHeading(left, fonts, "Projects");
-  d.projects.forEach((p, i) => {
-    if (i > 0) left.gap(12);
-    label(left, fonts, `Project ${i + 1} - ${p.duration}`);
-    body(left, fonts, p.title);
-    label(left, fonts, "Tools & Technologies");
-    body(left, fonts, p.toolsAndTechnologies.join(", "));
-    label(left, fonts, "Team Size");
-    body(left, fonts, p.teamSize);
-    label(left, fonts, "Role");
-    body(left, fonts, p.role);
-    label(left, fonts, "Project Link");
-    body(left, fonts, p.projectLink);
-    left.gap(7);
-    body(left, fonts, p.description, true);
-    left.gap(7);
-    bullets(left, fonts, p.responsibilities);
-  });
+  if (d.projects.length > 0) {
+    sectionHeading(left, fonts, "Projects");
+    d.projects.forEach((p, i) => {
+      if (i > 0) left.gap(12);
+      label(left, fonts, `Project ${i + 1} - ${p.duration}`);
+      body(left, fonts, p.title);
+      label(left, fonts, "Tools & Technologies");
+      body(left, fonts, p.toolsAndTechnologies.join(", "));
+      label(left, fonts, "Team Size");
+      body(left, fonts, p.teamSize);
+      label(left, fonts, "Role");
+      body(left, fonts, p.role);
+      label(left, fonts, "Project Link");
+      body(left, fonts, p.projectLink);
+      left.gap(7);
+      body(left, fonts, p.description, true);
+      left.gap(7);
+      bullets(left, fonts, p.responsibilities);
+    });
+  }
 
   /* right column (sidebar) */
   sectionHeading(right, fonts, "Skills");

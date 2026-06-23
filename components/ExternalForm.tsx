@@ -1,7 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import type { ExternalResume } from "@/lib/schemas";
 import { AddButton, AreaField, Field, ItemCard, Section, StringListEditor, moveItem } from "./fields";
+
+function RemovedSection({ title, onRestore }: { title: string; onRestore: () => void }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-dashed border-gray-300 bg-gray-50 px-5 py-3">
+      <span className="text-sm text-gray-400">
+        <span className="font-medium uppercase tracking-wide">{title}</span>
+        <span className="ml-2 italic">— removed from document</span>
+      </span>
+      <button
+        type="button"
+        onClick={onRestore}
+        className="text-xs font-medium text-brand-600 hover:underline"
+      >
+        Restore
+      </button>
+    </div>
+  );
+}
+
+const BLANK_PROJECT: ExternalResume["projects"][number] = {
+  client: "", teamSize: "", role: "", description: "", responsibilities: [""],
+};
 
 export default function ExternalForm({
   data,
@@ -10,8 +33,13 @@ export default function ExternalForm({
   data: ExternalResume;
   onChange: (data: ExternalResume) => void;
 }) {
+  const [projectsRemoved, setProjectsRemoved] = useState(false);
+
   const set = <K extends keyof ExternalResume>(key: K, value: ExternalResume[K]) =>
     onChange({ ...data, [key]: value });
+
+  const removeProjects = () => { set("projects", []); setProjectsRemoved(true); };
+  const restoreProjects = () => { set("projects", [{ ...BLANK_PROJECT }]); setProjectsRemoved(false); };
 
   return (
     <div className="space-y-5">
@@ -54,46 +82,49 @@ export default function ExternalForm({
         <StringListEditor items={data.toolsAndCertifications} onChange={(v) => set("toolsAndCertifications", v)} addLabel="Add tool/certification" />
       </Section>
 
-      <Section
-        title="Projects"
-        actions={
-          <AddButton
-            label="Add project"
-            onClick={() =>
-              set("projects", [...data.projects, { client: "", teamSize: "", role: "", description: "", responsibilities: [""] }])
-            }
-          />
-        }
-      >
-        {data.projects.map((p, i) => {
-          const setP = (patch: Partial<ExternalResume["projects"][number]>) =>
-            set("projects", data.projects.map((x, j) => (j === i ? { ...x, ...patch } : x)));
-          return (
-            <ItemCard
-              key={i}
-              title={`Project ${i + 1}`}
-              index={i}
-              length={data.projects.length}
-              onMove={(from, to) => set("projects", moveItem(data.projects, from, to))}
-              onRemove={(idx) => set("projects", data.projects.filter((_, j) => j !== idx))}
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Client" value={p.client} onChange={(v) => setP({ client: v })} />
-                <Field label="Team size" value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
-              </div>
-              <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
-              <AreaField label="Description" value={p.description} onChange={(v) => setP({ description: v })} />
-              <StringListEditor
-                label="Responsibilities (bullets)"
-                items={p.responsibilities}
-                onChange={(v) => setP({ responsibilities: v })}
-                addLabel="Add responsibility"
-                multiline
-              />
-            </ItemCard>
-          );
-        })}
-      </Section>
+      {projectsRemoved ? (
+        <RemovedSection title="Projects" onRestore={restoreProjects} />
+      ) : (
+        <Section
+          title="Projects"
+          onRemove={removeProjects}
+          actions={
+            <AddButton
+              label="Add project"
+              onClick={() => set("projects", [...data.projects, { ...BLANK_PROJECT }])}
+            />
+          }
+        >
+          {data.projects.map((p, i) => {
+            const setP = (patch: Partial<ExternalResume["projects"][number]>) =>
+              set("projects", data.projects.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+            return (
+              <ItemCard
+                key={i}
+                title={`Project ${i + 1}`}
+                index={i}
+                length={data.projects.length}
+                onMove={(from, to) => set("projects", moveItem(data.projects, from, to))}
+                onRemove={(idx) => set("projects", data.projects.filter((_, j) => j !== idx))}
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Client" value={p.client} onChange={(v) => setP({ client: v })} />
+                  <Field label="Team size" value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
+                </div>
+                <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
+                <AreaField label="Description" value={p.description} onChange={(v) => setP({ description: v })} />
+                <StringListEditor
+                  label="Responsibilities (bullets)"
+                  items={p.responsibilities}
+                  onChange={(v) => setP({ responsibilities: v })}
+                  addLabel="Add responsibility"
+                  multiline
+                />
+              </ItemCard>
+            );
+          })}
+        </Section>
+      )}
 
       <Section
         title="Experience"

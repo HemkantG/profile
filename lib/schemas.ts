@@ -33,7 +33,7 @@ export const externalResumeSchema = z.object({
   education: z.array(educationEntrySchema).min(1, "at least one education entry"),
   skills: z.array(nonEmpty("skill")).min(1, "at least one skill"),
   toolsAndCertifications: z.array(nonEmpty("tool/certification")).min(1, "at least one tool/certification"),
-  projects: z.array(externalProjectSchema).min(1, "at least one project"),
+  projects: z.array(externalProjectSchema),
   experience: z.array(externalExperienceSchema).min(1, "at least one experience entry"),
 });
 

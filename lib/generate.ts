@@ -20,6 +20,8 @@ function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> 
   return {
     ...d,
     tools: d.tools.join(", "),
+    // drives the conditional "Projects" heading in the template (omitted when empty)
+    hasProjects: d.projects.length > 0,
     projects: d.projects.map((p, i) => ({
       ...p,
       number: i + 1,

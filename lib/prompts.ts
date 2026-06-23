@@ -4,7 +4,8 @@ const COMMON_RULES = `You are a resume data extractor. Read the attached resume 
 
 STRICT OUTPUT RULES:
 - Output ONLY a single valid JSON object. No markdown, no code fences, no comments, no explanations before or after.
-- Every field listed in the schema is required unless marked optional. If the resume does not contain a value, write a sensible short placeholder such as "N/A" rather than omitting the field.
+- Every scalar field listed in the schema is required unless marked optional. If the resume does not contain a value, write a sensible short placeholder such as "N/A" rather than omitting the field.
+- For list/array sections, only include entries that exist in the resume. If a whole section has no real entries (e.g. no projects), output an empty array [] — never fabricate a placeholder entry filled with "N/A".
 - All values are strings or arrays as specified — never null or numbers.
 - Do not invent facts. Rephrase only for brevity and professional tone; keep all real names, dates, technologies and figures from the resume.`;
 
@@ -21,7 +22,7 @@ const EXTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
   ],
   "skills": [string],              // Flat list of skills, e.g. ["JavaScript", "ReactJS", "Team Management"]
   "toolsAndCertifications": [string], // Tools and certifications, e.g. ["JIRA", "GIT", "ServiceNow CSA"]
-  "projects": [                    // One entry per project (numbering is added automatically)
+  "projects": [                    // One entry per project (numbering is added automatically); use [] if none
     { "client": string,            // Client/project name, e.g. "Bharti Airtel, Africa"
       "teamSize": string,          // e.g. "5"
       "role": string,              // Candidate's role on the project, e.g. "Developer and Tester"
@@ -52,7 +53,7 @@ const INTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
     { "year": string,              // Completion year, e.g. "2008"
       "qualification": string }    // Degree + institution, e.g. "Bachelor of Engineering (IT), RGPV Bhopal"
   ],
-  "projects": [                    // One entry per project, most recent first (numbering is added automatically)
+  "projects": [                    // One entry per project, most recent first (numbering is added automatically); use [] if none
     { "duration": string,          // Project period, e.g. "Feb 2020 - June 2020"
       "title": string,             // Project title, e.g. "National College Admissions Consulting site"
       "toolsAndTechnologies": [string], // e.g. ["Node", "HTML", "MySQL", "React"]
