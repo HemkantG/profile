@@ -287,10 +287,11 @@ export default function Home() {
                 ← Back
               </button>
               <div className="flex flex-wrap items-center gap-2">
+                {/* PDF output is currently aligned with the DOCX for the external template only */}
                 <button
                   type="button"
                   onClick={() => setShowPreview((v) => !v)}
-                  disabled
+                  disabled={templateId !== "external"}
                   className="rounded-md border border-brand-300 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {showPreview ? "Hide preview" : "Preview"}
@@ -306,7 +307,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => handleGenerate("pdf")}
-                  disabled
+                  disabled={generating || templateId !== "external"}
                   className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   PDF ↓
@@ -314,7 +315,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => handleGenerate("both")}
-                  disabled
+                  disabled={generating || templateId !== "external"}
                   className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Download Both ↓

@@ -21,6 +21,7 @@ const PAGE_H = 792;
 
 const RED = rgb(0xea / 255, 0x1b / 255, 0x3d / 255);
 const DARK = rgb(0x37 / 255, 0x37 / 255, 0x42 / 255);
+const BLACK = rgb(0, 0, 0); // Title/Subtitle styles in the Word templates are pure black
 
 const BODY_SIZE = 11;
 const BODY_LINE = 17;
@@ -213,9 +214,9 @@ function body(flow: Flow, fonts: Fonts, text: string, justify = false) {
   flow.paragraph(text, { font: fonts.light, size: BODY_SIZE, justify });
 }
 
-function bullets(flow: Flow, fonts: Fonts, items: string[]) {
+function bullets(flow: Flow, fonts: Fonts, items: string[], justify = false) {
   for (const item of items) {
-    flow.paragraph(item, { font: fonts.light, size: BODY_SIZE, bullet: true });
+    flow.paragraph(item, { font: fonts.light, size: BODY_SIZE, bullet: true, justify });
   }
 }
 
@@ -244,17 +245,17 @@ function drawHeader(
   // name block, left
   y -= 26;
   page.drawText(crop(fonts.medium, 24, data.name, right - marginX - logoW - 20), {
-    x: marginX, y: y - 24, size: 24, font: fonts.medium, color: DARK,
+    x: marginX, y: y - 24, size: 24, font: fonts.medium, color: BLACK, // Title style is black
   });
   y -= 24 + 14;
-  const sub: Array<[string, PDFFont, number]> = [
-    [data.jobTitle, fonts.regular, 12],
-    [data.experienceSummary, fonts.light, BODY_SIZE],
-    [data.specialization, fonts.light, BODY_SIZE],
+  const sub: Array<[string, PDFFont, number, RGB]> = [
+    [data.jobTitle, fonts.regular, 12, BLACK], // Subtitle style is black
+    [data.experienceSummary, fonts.light, BODY_SIZE, DARK],
+    [data.specialization, fonts.light, BODY_SIZE, DARK],
   ];
-  for (const [text, font, size] of sub) {
+  for (const [text, font, size, color] of sub) {
     page.drawText(crop(font, size, text, right - marginX - logoW - 20), {
-      x: marginX, y: y - size, size, font, color: DARK,
+      x: marginX, y: y - size, size, font, color,
     });
     y -= size + 7;
   }
@@ -276,44 +277,49 @@ function renderExternal(doc: Doc, fonts: Fonts, logo: PDFImage, d: ExternalResum
   const startY = drawHeader(doc, fonts, logo, margin, d);
   const flow = new Flow(doc, margin, PAGE_W - margin * 2, startY);
 
+  // The Word template justifies all body text (docDefaults jc="both"), so the
+  // PDF justifies it too to stay visually aligned with the DOCX.
+  const ebody = (text: string) => body(flow, fonts, text, true);
+  const ebullets = (items: string[]) => bullets(flow, fonts, items, true);
+
   sectionHeading(flow, fonts, "Overview");
-  body(flow, fonts, d.overview, true);
+  ebody(d.overview);
 
   sectionHeading(flow, fonts, "Education & Training");
   for (const edu of d.education) {
     label(flow, fonts, edu.year);
-    body(flow, fonts, edu.qualification);
+    ebody(edu.qualification);
   }
 
   sectionHeading(flow, fonts, "Skills");
-  body(flow, fonts, d.skills.join(", "));
+  ebody(d.skills.join(", "));
 
   sectionHeading(flow, fonts, "Tools/Certifications");
-  body(flow, fonts, d.toolsAndCertifications.join(", "));
+  ebody(d.toolsAndCertifications.join(", "));
 
   sectionHeading(flow, fonts, "Projects/Experience");
   d.projects.forEach((p, i) => {
     if (i > 0) flow.gap(10);
     label(flow, fonts, `Project ${i + 1}`);
-    body(flow, fonts, p.client);
+    ebody(p.client);
     label(flow, fonts, "Team Size");
-    body(flow, fonts, p.teamSize);
+    ebody(p.teamSize);
     label(flow, fonts, "Role");
-    body(flow, fonts, p.role);
+    ebody(p.role);
     flow.gap(7);
-    body(flow, fonts, p.description, true);
+    ebody(p.description);
     flow.gap(7);
-    bullets(flow, fonts, p.responsibilities);
+    ebullets(p.responsibilities);
   });
 
   sectionHeading(flow, fonts, "Experience");
   d.experience.forEach((e, i) => {
     if (i > 0) flow.gap(10);
     label(flow, fonts, e.company);
-    body(flow, fonts, e.position);
-    body(flow, fonts, e.duration);
+    ebody(e.position);
+    ebody(e.duration);
     flow.gap(7);
-    bullets(flow, fonts, e.highlights);
+    ebullets(e.highlights);
   });
 }
 
