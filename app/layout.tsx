@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Generate branded InfoBeans profile documents (DOCX & PDF) from LLM-extracted JSON. Creating WOW!",
 };
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +31,7 @@ export default function RootLayout({
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center rounded-md bg-white px-3 py-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/img/logo.png" alt="InfoBeans" className="h-6 w-auto" />
+                <img src={`${BASE}/img/logo.png`} alt="InfoBeans" className="h-6 w-auto" />
               </span>
             </div>
             <p className="text-center text-sm sm:text-right">

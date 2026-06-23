@@ -290,7 +290,8 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setShowPreview((v) => !v)}
-                  className="rounded-md border border-brand-300 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50"
+                  disabled
+                  className="rounded-md border border-brand-300 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {showPreview ? "Hide preview" : "Preview"}
                 </button>
@@ -298,25 +299,25 @@ export default function Home() {
                   type="button"
                   onClick={() => handleGenerate("docx")}
                   disabled={generating}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+                  className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50"
                 >
-                  DOCX ↓
+                  {generating ? "Generating…" : "DOCX ↓"}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleGenerate("pdf")}
-                  disabled={generating}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+                  disabled
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   PDF ↓
                 </button>
                 <button
                   type="button"
                   onClick={() => handleGenerate("both")}
-                  disabled={generating}
-                  className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50"
+                  disabled
+                  className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {generating ? "Generating…" : "Download Both ↓"}
+                  Download Both ↓
                 </button>
               </div>
             </div>

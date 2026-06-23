@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
+
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const LINKS = [
   { href: "/", label: "Generator" },
@@ -17,7 +18,8 @@ export default function SiteNav() {
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-3">
-          <Image src="/img/logo.png" alt="InfoBeans" width={120} height={38} priority className="h-8 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${BASE}/img/logo.png`} alt="InfoBeans" width={120} height={38} className="h-8 w-auto" />
           <span className="hidden border-l border-gray-200 pl-3 text-sm font-medium text-ink-light sm:inline">
             Profile Generator
           </span>

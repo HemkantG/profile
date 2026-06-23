@@ -4,7 +4,8 @@ export const metadata: Metadata = {
   title: "Style Guide — Profile Generator",
 };
 
-const PDF_URL = "/style-guide/Style%20Guide.pdf";
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const PDF_URL = `${BASE}/style-guide/Style%20Guide.pdf`;
 
 export default function StyleGuidePage() {
   return (
