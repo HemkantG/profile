@@ -21,7 +21,6 @@ const PAGE_H = 792;
 
 const RED = rgb(0xea / 255, 0x1b / 255, 0x3d / 255);
 const DARK = rgb(0x37 / 255, 0x37 / 255, 0x42 / 255);
-const BLACK = rgb(0, 0, 0); // Title/Subtitle styles in the Word templates are pure black
 
 const BODY_SIZE = 11;
 const BODY_LINE = 17;
@@ -245,11 +244,11 @@ function drawHeader(
   // name block, left
   y -= 26;
   page.drawText(crop(fonts.medium, 24, data.name, right - marginX - logoW - 20), {
-    x: marginX, y: y - 24, size: 24, font: fonts.medium, color: BLACK, // Title style is black
+    x: marginX, y: y - 24, size: 24, font: fonts.medium, color: DARK,
   });
   y -= 24 + 14;
   const sub: Array<[string, PDFFont, number, RGB]> = [
-    [data.jobTitle, fonts.regular, 12, BLACK], // Subtitle style is black
+    [data.jobTitle, fonts.regular, 12, DARK],
     [data.experienceSummary, fonts.light, BODY_SIZE, DARK],
     [data.specialization, fonts.light, BODY_SIZE, DARK],
   ];
