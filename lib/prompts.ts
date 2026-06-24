@@ -5,7 +5,8 @@ const COMMON_RULES = `You are a resume data extractor. Read the attached resume 
 STRICT OUTPUT RULES:
 - Output ONLY a single valid JSON object. No markdown, no code fences, no comments, no explanations before or after.
 - Every scalar field listed in the schema is required unless marked optional. If the resume does not contain a value, write a sensible short placeholder such as "N/A" rather than omitting the field.
-- For list/array sections, only include entries that exist in the resume. If a whole section has no real entries (e.g. no projects), output an empty array [] — never fabricate a placeholder entry filled with "N/A".
+- Array sections: ONLY "projects" and "managerialExperience" may be empty ([]) when the resume genuinely has no such content. EVERY OTHER array field is required and MUST contain at least one entry — this includes education, skills, tools/certifications, domains, languages, experience, and (for each project) its "responsibilities" and "toolsAndTechnologies", and (for each employer) its "highlights".
+- Never output an empty array for a required field and never fill one with a single "N/A" item. If the resume does not list these explicitly, derive them from related content already present: e.g. generate a project's "responsibilities" bullets by summarising its description and the candidate's relevant experience; infer "toolsAndTechnologies"/"skills" from technologies mentioned anywhere in the resume; for "languages" default to "English" if none are stated. This is reorganising existing information, not inventing new facts.
 - All values are strings or arrays as specified — never null or numbers.
 - Do not invent facts. Rephrase only for brevity and professional tone; keep all real names, dates, technologies and figures from the resume.`;
 
@@ -27,14 +28,14 @@ const EXTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
       "teamSize": string,          // e.g. "5"
       "role": string,              // Candidate's role on the project, e.g. "Developer and Tester"
       "description": string,       // 2-4 sentence paragraph describing the project and contribution
-      "responsibilities": [string] // 4-8 bullet points, each a single past-tense sentence
+      "responsibilities": [string] // REQUIRED, never empty: 4-8 bullet points, each a single past-tense sentence. If none are listed for this project, write 3-6 by summarising the description and the candidate's related experience
     }
   ],
   "experience": [                  // One entry per employer, most recent first
     { "company": string,           // e.g. "Accenture"
       "position": string,          // e.g. "ServiceNow Developer"
       "duration": string,          // e.g. "2023 - Present"
-      "highlights": [string]       // 4-8 achievement bullet points, each a single sentence
+      "highlights": [string]       // REQUIRED, never empty: 4-8 achievement bullet points, each a single sentence
     }
   ]
 }`;
@@ -56,12 +57,12 @@ const INTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
   "projects": [                    // One entry per project, most recent first (numbering is added automatically); use [] if none
     { "duration": string,          // Project period, e.g. "Feb 2020 - June 2020"
       "title": string,             // Project title, e.g. "National College Admissions Consulting site"
-      "toolsAndTechnologies": [string], // e.g. ["Node", "HTML", "MySQL", "React"]
+      "toolsAndTechnologies": [string], // REQUIRED, never empty: ≥1 tech, e.g. ["Node", "HTML", "MySQL", "React"]. Infer from the project description or the candidate's skills if not listed
       "teamSize": string,          // e.g. "3"
       "role": string,              // e.g. "Project Lead"
       "projectLink": string,       // URL if public, otherwise "NDA"
       "description": string,       // 2-4 sentence paragraph describing the project
-      "responsibilities": [string] // 4-8 bullet points, each a single past-tense sentence
+      "responsibilities": [string] // REQUIRED, never empty: 4-8 bullet points, each a single past-tense sentence. If none are listed for this project, write 3-6 by summarising the description and the candidate's related experience
     }
   ],
   "skills": [                      // One entry per skill, shown in the sidebar with a rating
