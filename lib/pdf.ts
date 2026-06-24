@@ -219,6 +219,19 @@ function bullets(flow: Flow, fonts: Fonts, items: string[], justify = false) {
   }
 }
 
+/** Exact placement of the "A PROUD MEMBER OF" line + floating logo, read from
+ *  the Word template's page margins and the logo's drawing anchor. When
+ *  supplied, the header reproduces the DOCX layout 1:1; otherwise it falls back
+ *  to the original right-aligned placement. */
+interface HeaderLayout {
+  topMargin: number; // page top margin (pt) where header content begins
+  logoX: number; // logo left edge, page coords
+  logoTopOffset: number; // logo top, measured down from topMargin
+  logoW: number;
+  logoH: number;
+  memberLeadSpaces: number; // leading spaces that push "A PROUD MEMBER OF" right
+}
+
 /** Page-1 header shared by both templates: name block left, logo right. */
 function drawHeader(
   doc: Doc,
@@ -226,24 +239,33 @@ function drawHeader(
   logo: PDFImage,
   marginX: number,
   data: { name: string; jobTitle: string; experienceSummary: string; specialization: string },
+  layout?: HeaderLayout,
 ): number {
   const page = doc.page(0);
   const right = PAGE_W - marginX;
-  let y = PAGE_H - doc.marginTop;
-
-  // "A PROUD MEMBER OF" + logo, right-aligned
   const memberText = "A PROUD MEMBER OF";
   const memberSize = 8;
-  const memberW = fonts.light.widthOfTextAtSize(memberText, memberSize);
-  page.drawText(memberText, { x: right - memberW, y: y - memberSize, size: memberSize, font: fonts.light, color: DARK });
-  const logoW = 150;
-  const logoH = logoW * (logo.height / logo.width);
-  page.drawImage(logo, { x: right - logoW, y: y - memberSize - 8 - logoH, width: logoW, height: logoH });
-  const logoBottom = y - memberSize - 8 - logoH;
+
+  let y = PAGE_H - (layout ? layout.topMargin : doc.marginTop);
+
+  // logo + member-text geometry: from the DOCX anchor when available, else right-aligned
+  const logoW = layout ? layout.logoW : 150;
+  const logoH = layout ? layout.logoH : logoW * (logo.height / logo.width);
+  const logoX = layout ? layout.logoX : right - logoW;
+  const logoTop = layout ? y - layout.logoTopOffset : y - memberSize - 8;
+  const memberX = layout
+    ? marginX + fonts.light.widthOfTextAtSize(" ".repeat(layout.memberLeadSpaces), memberSize)
+    : right - fonts.light.widthOfTextAtSize(memberText, memberSize);
+  // keep the name block clear of the logo
+  const nameMaxW = logoX - marginX - (layout ? 12 : 20);
+
+  page.drawText(memberText, { x: memberX, y: y - memberSize, size: memberSize, font: fonts.light, color: DARK });
+  page.drawImage(logo, { x: logoX, y: logoTop - logoH, width: logoW, height: logoH });
+  const logoBottom = logoTop - logoH;
 
   // name block, left
   y -= 26;
-  page.drawText(crop(fonts.medium, 24, data.name, right - marginX - logoW - 20), {
+  page.drawText(crop(fonts.medium, 24, data.name, nameMaxW), {
     x: marginX, y: y - 24, size: 24, font: fonts.medium, color: DARK,
   });
   y -= 24 + 14;
@@ -253,7 +275,7 @@ function drawHeader(
     [data.specialization, fonts.light, BODY_SIZE, DARK],
   ];
   for (const [text, font, size, color] of sub) {
-    page.drawText(crop(font, size, text, right - marginX - logoW - 20), {
+    page.drawText(crop(font, size, text, nameMaxW), {
       x: marginX, y: y - size, size, font, color,
     });
     y -= size + 7;
@@ -273,7 +295,16 @@ function crop(font: PDFFont, size: number, text: string, maxWidth: number): stri
 
 function renderExternal(doc: Doc, fonts: Fonts, logo: PDFImage, d: ExternalResume) {
   const margin = 72; // 1" like the Word template
-  const startY = drawHeader(doc, fonts, logo, margin, d);
+  // Header placement taken verbatim from the external .docx (page margins + the
+  // logo's floating-drawing anchor) so the PDF header matches the DOCX exactly.
+  const startY = drawHeader(doc, fonts, logo, margin, d, {
+    topMargin: 72, // 1440 twips
+    logoX: margin + 340.77, // posH: 340.77pt from the column (left margin)
+    logoTopOffset: 9.75, // posV: 9.75pt below the paragraph (page) top
+    logoW: 152.73, // wp:extent 1939727 EMU
+    logoH: 48.88, // wp:extent 620713 EMU
+    memberLeadSpaces: 162,
+  });
   const flow = new Flow(doc, margin, PAGE_W - margin * 2, startY);
 
   // The Word template justifies all body text (docDefaults jc="both"), so the
