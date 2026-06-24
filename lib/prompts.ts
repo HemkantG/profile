@@ -5,7 +5,7 @@ const COMMON_RULES = `You are a resume data extractor. Read the attached resume 
 STRICT OUTPUT RULES:
 - Output ONLY a single valid JSON object. No markdown, no code fences, no comments, no explanations before or after.
 - Every scalar field listed in the schema is required unless marked optional. If the resume does not contain a value, write a sensible short placeholder such as "N/A" rather than omitting the field.
-- For list/array sections, only include entries that exist in the resume. If a whole section has no real entries (e.g. no certifications), output an empty array [] — never fabricate a placeholder entry filled with "N/A". (Exceptions: the internal template's "projects" — see PROJECTS RULES below when present; and its "languages", which has a required fallback noted in the schema.)
+- For list/array sections, only include entries that exist in the resume. If a whole section has no real entries (e.g. no projects), output an empty array [] — never fabricate a placeholder entry filled with "N/A".
 - All values are strings or arrays as specified — never null or numbers.
 - Do not invent facts. Rephrase only for brevity and professional tone; keep all real names, dates, technologies and figures from the resume.`;
 
@@ -53,7 +53,7 @@ const INTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
     { "year": string,              // Completion year, e.g. "2008"
       "qualification": string }    // Degree + institution, e.g. "Bachelor of Engineering (IT), RGPV Bhopal"
   ],
-  "projects": [                    // One entry per project, most recent first (numbering is added automatically). If no projects are explicitly listed, derive them from work experience — see PROJECTS RULES below
+  "projects": [                    // One entry per project, most recent first (numbering is added automatically); use [] if none
     { "duration": string,          // Project period, e.g. "Feb 2020 - June 2020"
       "title": string,             // Project title, e.g. "National College Admissions Consulting site"
       "toolsAndTechnologies": [string], // e.g. ["Node", "HTML", "MySQL", "React"]
@@ -72,24 +72,14 @@ const INTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
   "tools": [string],               // e.g. ["JIRA", "SVN", "GIT"]
   "managerialExperience": [string],// Managerial capabilities, e.g. ["Project Management", "Team Building"]; use [] if none
   "domains": [string],             // Business domains worked in, e.g. ["Healthcare", "E-commerce"]
-  "languages": [string]            // Spoken languages, e.g. ["English", "Hindi"]. If the resume does not mention any spoken languages, fall back to exactly ["English", "Hindi"] — this field must never be empty
+  "languages": [string]            // Spoken languages, e.g. ["English", "Hindi"]
 }`;
 
 const INTERNAL_EXAMPLE = `EXAMPLE OUTPUT (format reference only — use the actual resume content):
 {"name":"Amit Dave","jobTitle":"Senior Project Lead","experienceSummary":"3+ years of Industry Experience","specialization":"ServiceNow ITSM","overview":"ServiceNow professional with 3+ years of industry experience specializing in ITSM. Skilled in development, configuration, customization and implementation of ITSM modules.","education":[{"year":"2008","qualification":"Bachelor of Engineering (IT), RGPV Bhopal"}],"projects":[{"duration":"Feb 2020 - June 2020","title":"National College Admissions Consulting site","toolsAndTechnologies":["Node","HTML","MySQL","CSS","React","PayPal"],"teamSize":"3","role":"Project Lead","projectLink":"NDA","description":"Developed a web-based college admissions consulting platform that connects students with experienced former admissions officers for personalized application reviews and guidance.","responsibilities":["Led end-to-end development of a college admissions consulting platform.","Developed frontend and backend modules using React, Node.js, and MySQL.","Integrated PayPal payment gateway for secure online transactions."]}],"skills":[{"name":"Java script","rating":"3.5"},{"name":"ReactJS","rating":"3.8"}],"certifications":["ServiceNow ITSM"],"tools":["JIRA","SVN","GIT"],"managerialExperience":["Project Management","Team Building"],"domains":["Healthcare","E-commerce"],"languages":["English","Hindi"]}`;
 
-const INTERNAL_PROJECT_RULES = `PROJECTS RULES (apply in this order):
-1. If the resume explicitly lists projects, extract those projects exactly as written.
-2. If NO projects are explicitly listed but the resume describes work experience at one or more companies/employers, derive the projects FROM that experience: create exactly ONE project per company/employer, in the same order they appear. Build each derived project's fields from that role — "title" from the work done at that company, "duration" from the employment dates, "role" from the designation held, "toolsAndTechnologies" from the technologies used there, "description" and "responsibilities" by reorganizing that role's achievements and duties into project form. Do not invent facts; only restructure what the resume already states about that role. For values the resume does not provide, use a short placeholder ("N/A" for teamSize, "NDA" for projectLink).
-3. The number of derived projects MUST equal the number of distinct companies/employers in the work experience — never more, never fewer.
-4. If there are neither explicit projects nor any work experience, output "projects": [].
-
-EXAMPLE of rule 2: the resume lists no Projects section but shows the candidate worked at Google, Meta, and Anthropic. You MUST output exactly three projects — one derived from the Google role, one from the Meta role, and one from the Anthropic role:
-"projects":[{"duration":"2021 - 2023","title":"Search Ranking Platform","toolsAndTechnologies":["Go","BigQuery","TensorFlow"],"teamSize":"N/A","role":"Senior Software Engineer","projectLink":"NDA","description":"Worked on Google's search ranking platform, improving relevance and latency of query results at scale.","responsibilities":["Built ranking features that improved result relevance.","Optimized serving latency for high-traffic queries."]},{"duration":"2019 - 2021","title":"Ads Delivery System","toolsAndTechnologies":["Python","Spark"],"teamSize":"N/A","role":"Software Engineer","projectLink":"NDA","description":"Contributed to Meta's ads delivery system covering targeting and reporting.","responsibilities":["Developed targeting pipelines for ad delivery.","Implemented reporting dashboards for advertisers."]},{"duration":"2017 - 2019","title":"Model Safety Tooling","toolsAndTechnologies":["Python","PyTorch"],"teamSize":"N/A","role":"Research Engineer","projectLink":"NDA","description":"Built internal tooling at Anthropic to evaluate and improve model safety.","responsibilities":["Created evaluation harnesses for model behavior.","Automated safety regression checks."]}]`;
-
 export function promptFor(id: TemplateId): string {
   const schema = id === "external" ? EXTERNAL_SCHEMA : INTERNAL_SCHEMA;
   const example = id === "external" ? EXTERNAL_EXAMPLE : INTERNAL_EXAMPLE;
-  const extra = id === "internal" ? `\n\n${INTERNAL_PROJECT_RULES}` : "";
-  return `${COMMON_RULES}\n\n${schema}\n\n${example}${extra}`;
+  return `${COMMON_RULES}\n\n${schema}\n\n${example}`;
 }
