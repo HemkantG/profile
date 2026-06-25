@@ -10,6 +10,7 @@ import { promptFor } from "@/lib/prompts";
 import { generateDocx } from "@/lib/generate";
 import { generatePdf } from "@/lib/pdfClient";
 import {
+  blankResume,
   schemaFor,
   type ExternalResume,
   type InternalResume,
@@ -72,6 +73,14 @@ export default function Home() {
 
   const continueToReview = () => {
     if (validateJson(jsonText)) setStep(2);
+  };
+
+  const startBlankForm = () => {
+    if (!templateId) return;
+    setData(blankResume(templateId));
+    setErrors(null);
+    setJsonText("");
+    goTo(2);
   };
 
   const handleGenerate = async (format: "docx" | "pdf" | "both") => {
@@ -174,6 +183,7 @@ export default function Home() {
             </div>
 
             {templateId && (
+              <>
               <div className="animate-fade-up rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                 <h2 className="mb-2 font-semibold text-ink-dark">Get the extraction prompt</h2>
                 <p className="mb-4 text-sm text-ink-light">
@@ -204,6 +214,24 @@ export default function Home() {
                   </pre>
                 </details>
               </div>
+
+              <div className="animate-fade-up rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-2 font-semibold text-ink-dark">Or fill in a blank form</h2>
+                <p className="mb-4 text-sm text-ink-light">
+                  Skip the LLM entirely and enter the{" "}
+                  <strong className="text-ink">{TEMPLATES.find((t) => t.id === templateId)?.name}</strong> details by
+                  hand. A blank form opens with every section ready to fill in — you can add, remove and reorder items,
+                  then download just like the JSON flow.
+                </p>
+                <button
+                  type="button"
+                  onClick={startBlankForm}
+                  className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600"
+                >
+                  Start with a blank form →
+                </button>
+              </div>
+              </>
             )}
           </div>
         )}

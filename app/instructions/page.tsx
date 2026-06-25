@@ -35,11 +35,31 @@ export default function InstructionsPage() {
       <div className="border-l-4 border-brand-500 pl-4">
         <h1 className="text-2xl font-bold text-ink-dark">How to generate a profile</h1>
         <p className="mt-1 text-sm text-ink-light">
-          The generator fills one of two pre-styled Word templates with data extracted from a candidate&apos;s profile
-          by an LLM. The typography (Title, Subtitle, Heading&nbsp;1/2, Normal text) is applied automatically and
-          follows the <Link href="/style-guide" className="font-medium text-brand-600 underline">Style Guide</Link>.
+          The generator fills one of two pre-styled Word templates with the candidate&apos;s data. The typography
+          (Title, Subtitle, Heading&nbsp;1/2, Normal text) is applied automatically and follows the{" "}
+          <Link href="/style-guide" className="font-medium text-brand-600 underline">Style Guide</Link>.
         </p>
       </div>
+
+      <Card title="Two ways to provide the data">
+        <p className="mb-3 text-sm text-gray-600">
+          After picking a template on the{" "}
+          <Link href="/" className="text-brand-600 underline">Generator</Link> page, choose how you want to enter the
+          profile details:
+        </p>
+        <ul className="list-disc space-y-2 pl-5 text-sm text-gray-600">
+          <li>
+            <strong>Use an LLM (fastest):</strong> copy the extraction prompt, run it against the candidate&apos;s
+            existing resume in Claude / ChatGPT, then paste the returned JSON and validate. Best when you already have
+            a resume to convert.
+          </li>
+          <li>
+            <strong>Fill in a blank form (no LLM):</strong> click <strong>Start with a blank form</strong> to open an
+            empty version of the template and type each field in directly. Best when there is no source resume, or for
+            quick manual edits. Both paths land on the same <strong>Review &amp; Generate</strong> step.
+          </li>
+        </ul>
+      </Card>
 
       <Card title="External Profile — client-facing resume">
         <p className="mb-4 text-sm text-gray-600">
@@ -49,7 +69,8 @@ export default function InstructionsPage() {
         <ol className="space-y-4">
           <Step n={1} title="Select the template">
             On the <Link href="/" className="text-brand-600 underline">Generator</Link> page, choose the{" "}
-            <strong>External Profile</strong> card.
+            <strong>External Profile</strong> card. To enter everything by hand instead, click{" "}
+            <strong>Start with a blank form</strong> and skip to step 5.
           </Step>
           <Step n={2} title="Copy the extraction prompt">
             Click <strong>Copy LLM Prompt</strong>. The prompt contains the exact JSON schema the External template
@@ -95,7 +116,8 @@ export default function InstructionsPage() {
         <ol className="space-y-4">
           <Step n={1} title="Select the template">
             On the <Link href="/" className="text-brand-600 underline">Generator</Link> page, choose the{" "}
-            <strong>Internal Profile</strong> card.
+            <strong>Internal Profile</strong> card. To enter everything by hand instead, click{" "}
+            <strong>Start with a blank form</strong> and skip to step 5.
           </Step>
           <Step n={2} title="Copy the extraction prompt">
             Click <strong>Copy LLM Prompt</strong>. This prompt differs from the External one — it additionally asks

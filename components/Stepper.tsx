@@ -1,6 +1,6 @@
 "use client";
 
-const STEPS = ["Template", "Paste JSON", "Review & Generate"];
+const STEPS = ["Template", "Provide data", "Review & Generate"];
 
 export default function Stepper({
   current,

@@ -81,3 +81,39 @@ export type ResumeData = ExternalResume | InternalResume;
 
 export const schemaFor = (id: TemplateId) =>
   id === "external" ? externalResumeSchema : internalResumeSchema;
+
+/** An empty resume for the "fill in a blank form" flow: every section has one
+ *  editable placeholder entry so all form fields render ready to be typed into. */
+export function blankResume(id: TemplateId): ResumeData {
+  if (id === "external") {
+    return {
+      name: "",
+      jobTitle: "",
+      experienceSummary: "",
+      specialization: "",
+      overview: "",
+      education: [{ year: "", qualification: "" }],
+      skills: [""],
+      toolsAndCertifications: [""],
+      projects: [{ client: "", teamSize: "", role: "", description: "", responsibilities: [""] }],
+      experience: [{ company: "", position: "", duration: "", highlights: [""] }],
+    };
+  }
+  return {
+    name: "",
+    jobTitle: "",
+    experienceSummary: "",
+    specialization: "",
+    overview: "",
+    education: [{ year: "", qualification: "" }],
+    projects: [
+      { duration: "", title: "", toolsAndTechnologies: [""], teamSize: "", role: "", projectLink: "", description: "", responsibilities: [""] },
+    ],
+    skills: [{ name: "", rating: "" }],
+    certifications: [""],
+    tools: [""],
+    managerialExperience: [""],
+    domains: [""],
+    languages: [""],
+  };
+}
