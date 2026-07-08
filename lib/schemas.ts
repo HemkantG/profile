@@ -30,9 +30,12 @@ export const externalResumeSchema = z.object({
   experienceSummary: nonEmpty("experienceSummary"),
   specialization: nonEmpty("specialization"),
   overview: nonEmpty("overview"),
-  education: z.array(educationEntrySchema).min(1, "at least one education entry"),
+  education: z
+    .array(educationEntrySchema)
+    .length(1, "exactly one education entry — the highest qualification only"),
   skills: z.array(nonEmpty("skill")).min(1, "at least one skill"),
-  toolsAndCertifications: z.array(nonEmpty("tool/certification")).min(1, "at least one tool/certification"),
+  tools: z.array(nonEmpty("tool")).min(1, "at least one tool"),
+  certifications: z.array(nonEmpty("certification")).min(1, "at least one certification"),
   projects: z.array(externalProjectSchema),
   experience: z.array(externalExperienceSchema).min(1, "at least one experience entry"),
 });
@@ -63,7 +66,9 @@ export const internalResumeSchema = z.object({
   experienceSummary: nonEmpty("experienceSummary"),
   specialization: nonEmpty("specialization"),
   overview: nonEmpty("overview"),
-  education: z.array(educationEntrySchema).min(1, "at least one education entry"),
+  education: z
+    .array(educationEntrySchema)
+    .length(1, "exactly one education entry — the highest qualification only"),
   projects: z.array(internalProjectSchema),
   skills: z.array(internalSkillSchema).min(1, "at least one skill"),
   certifications: z.array(nonEmpty("certification")).min(1, "at least one certification"),
@@ -94,7 +99,8 @@ export function blankResume(id: TemplateId): ResumeData {
       overview: "",
       education: [{ year: "", qualification: "" }],
       skills: [""],
-      toolsAndCertifications: [""],
+      tools: [""],
+      certifications: [""],
       projects: [{ client: "", teamSize: "", role: "", description: "", responsibilities: [""] }],
       experience: [{ company: "", position: "", duration: "", highlights: [""] }],
     };

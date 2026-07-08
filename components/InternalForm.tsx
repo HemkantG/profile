@@ -56,25 +56,12 @@ export default function InternalForm({
         <AreaField label="Overview" value={data.overview} onChange={(v) => set("overview", v)} />
       </Section>
 
-      <Section
-        title="Education & Training"
-        actions={<AddButton label="Add entry" onClick={() => set("education", [...data.education, { year: "", qualification: "" }])} />}
-      >
-        {data.education.map((edu, i) => (
-          <ItemCard
-            key={i}
-            title={`Entry ${i + 1}`}
-            index={i}
-            length={data.education.length}
-            onMove={(from, to) => set("education", moveItem(data.education, from, to))}
-            onRemove={(idx) => set("education", data.education.filter((_, j) => j !== idx))}
-          >
-            <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
-              <Field label="Year" value={edu.year} onChange={(v) => set("education", data.education.map((e, j) => (j === i ? { ...e, year: v } : e)))} />
-              <Field label="Qualification" value={edu.qualification} onChange={(v) => set("education", data.education.map((e, j) => (j === i ? { ...e, qualification: v } : e)))} />
-            </div>
-          </ItemCard>
-        ))}
+      <Section title="Education & Training">
+        <p className="text-xs text-ink-light">Highest qualification only — the profile carries a single education entry.</p>
+        <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+          <Field label="Year" value={data.education[0].year} onChange={(v) => set("education", [{ ...data.education[0], year: v }])} />
+          <Field label="Qualification" value={data.education[0].qualification} onChange={(v) => set("education", [{ ...data.education[0], qualification: v }])} />
+        </div>
       </Section>
 
       {projectsRemoved ? (
@@ -104,8 +91,8 @@ export default function InternalForm({
               >
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Title" value={p.title} onChange={(v) => setP({ title: v })} />
-                  <Field label="Duration" value={p.duration} onChange={(v) => setP({ duration: v })} />
-                  <Field label="Team size" value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
+                  <Field label="Duration" optional value={p.duration} onChange={(v) => setP({ duration: v })} />
+                  <Field label="Team size" optional value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
                   <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
                 </div>
                 <Field label="Project link (URL or NDA)" value={p.projectLink} onChange={(v) => setP({ projectLink: v })} />

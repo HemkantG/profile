@@ -53,33 +53,24 @@ export default function ExternalForm({
         <AreaField label="Overview" value={data.overview} onChange={(v) => set("overview", v)} />
       </Section>
 
-      <Section
-        title="Education & Training"
-        actions={<AddButton label="Add entry" onClick={() => set("education", [...data.education, { year: "", qualification: "" }])} />}
-      >
-        {data.education.map((edu, i) => (
-          <ItemCard
-            key={i}
-            title={`Entry ${i + 1}`}
-            index={i}
-            length={data.education.length}
-            onMove={(from, to) => set("education", moveItem(data.education, from, to))}
-            onRemove={(idx) => set("education", data.education.filter((_, j) => j !== idx))}
-          >
-            <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
-              <Field label="Year" value={edu.year} onChange={(v) => set("education", data.education.map((e, j) => (j === i ? { ...e, year: v } : e)))} />
-              <Field label="Qualification" value={edu.qualification} onChange={(v) => set("education", data.education.map((e, j) => (j === i ? { ...e, qualification: v } : e)))} />
-            </div>
-          </ItemCard>
-        ))}
+      <Section title="Education & Training">
+        <p className="text-xs text-ink-light">Highest qualification only — the profile carries a single education entry.</p>
+        <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+          <Field label="Year" optional value={data.education[0].year} onChange={(v) => set("education", [{ ...data.education[0], year: v }])} />
+          <Field label="Qualification" value={data.education[0].qualification} onChange={(v) => set("education", [{ ...data.education[0], qualification: v }])} />
+        </div>
       </Section>
 
       <Section title="Skills">
         <StringListEditor items={data.skills} onChange={(v) => set("skills", v)} addLabel="Add skill" />
       </Section>
 
-      <Section title="Tools / Certifications">
-        <StringListEditor items={data.toolsAndCertifications} onChange={(v) => set("toolsAndCertifications", v)} addLabel="Add tool/certification" />
+      <Section title="Tools">
+        <StringListEditor items={data.tools} onChange={(v) => set("tools", v)} addLabel="Add tool" />
+      </Section>
+
+      <Section title="Certifications">
+        <StringListEditor items={data.certifications} onChange={(v) => set("certifications", v)} addLabel="Add certification" />
       </Section>
 
       {projectsRemoved ? (
@@ -109,7 +100,7 @@ export default function ExternalForm({
               >
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Client" value={p.client} onChange={(v) => setP({ client: v })} />
-                  <Field label="Team size" value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
+                  <Field label="Team size" optional value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
                 </div>
                 <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
                 <AreaField label="Description" value={p.description} onChange={(v) => setP({ description: v })} />

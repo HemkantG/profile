@@ -14,8 +14,9 @@ export default function StyleGuidePage() {
         <div className="border-l-4 border-brand-500 pl-4">
           <h1 className="text-2xl font-bold text-ink-dark">Style Guide</h1>
           <p className="text-sm text-ink-light">
-            Typography styles used by the profile templates. The generator applies these automatically — use this
-            guide when editing a generated document by hand in Google Docs or Word.
+            Typography styles used by the profile template. The generator automatically applies the standard
+            InfoBeans profile formatting. If you make any manual edits in Google Docs or Microsoft Word, use the
+            styles below to maintain a consistent look and feel.
           </p>
         </div>
         <a

@@ -13,7 +13,8 @@ const external = {
     { year: "2012", qualification: "B.E. (IT), RGPV Bhopal" },
   ],
   skills: "AWS, Terraform, Go",
-  toolsAndCertifications: "JIRA, GIT, AWS SA Pro",
+  tools: "JIRA, GIT",
+  certifications: "AWS SA Pro, CKA",
   projects: [
     { number: 1, client: "Acme Corp", teamSize: "6", role: "Tech Lead", description: "Migrated workloads to AWS.", responsibilities: ["Led migration.", "Cut costs 30%."] },
     { number: 2, client: "Globex", teamSize: "4", role: "Developer", description: "Built data pipeline.", responsibilities: ["Designed ETL.", "Automated reports."] },
@@ -50,9 +51,22 @@ const internal = {
   languages: ["English", "Hindi"],
 };
 
-// mirror prepareData: the internal template hides its "Projects" heading via {#hasProjects}
-const prep = (id, data) =>
-  id === "internal" ? { ...data, hasProjects: data.projects.length > 0 } : data;
+// mirror prepareData: hasProjects hides the internal "Projects" heading; hasYear/hasTeamSize/hasDuration
+// let the templates drop a cleared (empty) optional field.
+const prep = (id, data) => {
+  if (id === "internal") {
+    return {
+      ...data,
+      hasProjects: data.projects.length > 0,
+      projects: data.projects.map((p) => ({ ...p, hasTeamSize: !!String(p.teamSize).trim(), hasDuration: !!String(p.duration).trim() })),
+    };
+  }
+  return {
+    ...data,
+    education: data.education.map((e) => ({ ...e, hasYear: !!String(e.year).trim() })),
+    projects: data.projects.map((p) => ({ ...p, hasTeamSize: !!String(p.teamSize).trim() })),
+  };
+};
 
 function render(id, data) {
   const zip = new PizZip(fs.readFileSync(`public/templates/${id}.docx`));

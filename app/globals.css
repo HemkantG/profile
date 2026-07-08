@@ -16,14 +16,21 @@
   --color-brand-900: #5d0817;
 
   --color-ink: #373742; /* charcoal body/text */
-  --color-ink-light: #5b5b66;
+  --color-ink-light: #676775; /* medium gray — secondary text (compass.creatingwow.in) */
   --color-ink-dark: #1c1c22; /* headers / dark sections */
+
+  --color-hairline: #e6e6ed; /* light gray — borders */
+  --color-cream: #fff9ed; /* light cream — brand surface */
+  --color-peach: #ffd0d8;
+  --color-warm: #fff3d4;
+  --color-brand-dark: #aa142d; /* dark red */
+  --color-brand-deep: #7c2235; /* deep red */
 
   --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --background: #f6f6f8;
+  --background: #fff9ed; /* light cream — brand page background (compass.creatingwow.in) */
   --foreground: #373742;
 }
 

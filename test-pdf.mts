@@ -18,7 +18,8 @@ const external: ExternalResume = {
     "ServiceNow professional with 3+ years of industry experience specializing in IT Service Management (ITSM). Skilled in ServiceNow development, configuration, customization, and implementation of ITSM modules. Experienced in requirement analysis, workflow automation, incident, problem, change, and service request management. Proficient in collaborating with cross-functional teams to deliver scalable solutions and enhance operational efficiency.",
   education: [{ year: "2008", qualification: "Bachelor of Engineering (IT), RGPV Bhopal" }],
   skills: ["Java script", "WordPress", "MYSQL", "MongoDB", "MVC(CodeIgniter, Laravel, YII, CakePHP)", "HTML5 & CSS", "jQuery & JavaScript", "NodeJS", "ReactJS", "Client Interaction", "Team Management"],
-  toolsAndCertifications: ["JIRA", "SVN", "GIT"],
+  tools: ["JIRA", "SVN", "GIT"],
+  certifications: ["ServiceNow CSA"],
   projects: [
     {
       client: "Bharti Airtel, Africa",

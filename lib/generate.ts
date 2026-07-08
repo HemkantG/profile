@@ -12,8 +12,11 @@ function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> 
     return {
       ...d,
       skills: d.skills.join(", "),
-      toolsAndCertifications: d.toolsAndCertifications.join(", "),
-      projects: d.projects.map((p, i) => ({ ...p, number: i + 1 })),
+      tools: d.tools.join(", "),
+      certifications: d.certifications.join(", "),
+      // hasYear/hasTeamSize let the template drop a cleared (empty) field entirely.
+      education: d.education.map((e) => ({ ...e, hasYear: !!e.year.trim() })),
+      projects: d.projects.map((p, i) => ({ ...p, number: i + 1, hasTeamSize: !!p.teamSize.trim() })),
     };
   }
   const d = data as InternalResume;
@@ -26,6 +29,9 @@ function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> 
       ...p,
       number: i + 1,
       toolsAndTechnologies: p.toolsAndTechnologies.join(", "),
+      // hasTeamSize/hasDuration let the template drop a cleared (empty) field entirely.
+      hasTeamSize: !!p.teamSize.trim(),
+      hasDuration: !!p.duration.trim(),
     })),
   };
 }

@@ -5,8 +5,9 @@ const COMMON_RULES = `You are a resume data extractor. Read the attached resume 
 STRICT OUTPUT RULES:
 - Output ONLY a single valid JSON object. No markdown, no code fences, no comments, no explanations before or after.
 - Every scalar field listed in the schema is required unless marked optional. If the resume does not contain a value, write a sensible short placeholder such as "N/A" rather than omitting the field.
-- Array sections: ONLY "projects" and "managerialExperience" may be empty ([]) when the resume genuinely has no such content. EVERY OTHER array field is required and MUST contain at least one entry — this includes education, skills, tools/certifications, domains, languages, experience, and (for each project) its "responsibilities" and "toolsAndTechnologies", and (for each employer) its "highlights".
+- Array sections: ONLY "projects" and "managerialExperience" may be empty ([]) when the resume genuinely has no such content. EVERY OTHER array field is required and MUST contain at least one entry — this includes education, skills, tools, certifications, domains, languages, experience, and (for each project) its "responsibilities" and "toolsAndTechnologies", and (for each employer) its "highlights".
 - Never output an empty array for a required field and never fill one with a single "N/A" item. If the resume does not list these explicitly, derive them from related content already present: e.g. generate a project's "responsibilities" bullets by summarising its description and the candidate's relevant experience; infer "toolsAndTechnologies"/"skills" from technologies mentioned anywhere in the resume; for "languages" default to "English" if none are stated. This is reorganising existing information, not inventing new facts.
+- "education" must contain EXACTLY ONE entry: the candidate's highest qualification (the most advanced degree, e.g. a Master's over a Bachelor's). Ignore all lower or earlier education and training.
 - All values are strings or arrays as specified — never null or numbers.
 - Do not invent facts. Rephrase only for brevity and professional tone; keep all real names, dates, technologies and figures from the resume.`;
 
@@ -17,12 +18,13 @@ const EXTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
   "experienceSummary": string,     // One line of total experience, e.g. "3+ years of Industry Experience"
   "specialization": string,        // Primary specialization line, e.g. "ServiceNow ITSM"
   "overview": string,              // 3-5 sentence professional summary paragraph
-  "education": [                   // One entry per degree/training, most recent first
+  "education": [                   // EXACTLY ONE entry: the highest qualification only
     { "year": string,              // Completion year, e.g. "2008"
       "qualification": string }    // Degree + institution, e.g. "Bachelor of Engineering (IT), RGPV Bhopal"
   ],
   "skills": [string],              // Flat list of skills, e.g. ["JavaScript", "ReactJS", "Team Management"]
-  "toolsAndCertifications": [string], // Tools and certifications, e.g. ["JIRA", "GIT", "ServiceNow CSA"]
+  "tools": [string],               // Tools/software the candidate uses, e.g. ["JIRA", "GIT", "SVN"]
+  "certifications": [string],      // Professional certifications, e.g. ["ServiceNow CSA", "AWS SAA"]. If none, infer at least one relevant to the candidate's skills
   "projects": [                    // One entry per project (numbering is added automatically); use [] if none
     { "client": string,            // Client/project name, e.g. "Bharti Airtel, Africa"
       "teamSize": string,          // e.g. "5"
@@ -41,7 +43,7 @@ const EXTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
 }`;
 
 const EXTERNAL_EXAMPLE = `EXAMPLE OUTPUT (format reference only — use the actual resume content):
-{"name":"Amit Dave","jobTitle":"Senior Project Lead","experienceSummary":"3+ years of Industry Experience","specialization":"ServiceNow ITSM","overview":"ServiceNow professional with 3+ years of experience specializing in ITSM. Skilled in development, configuration and customization of ServiceNow modules. Experienced in workflow automation and cross-functional collaboration.","education":[{"year":"2008","qualification":"Bachelor of Engineering (IT), RGPV Bhopal"}],"skills":["JavaScript","WordPress","MySQL","ReactJS","Team Management"],"toolsAndCertifications":["JIRA","SVN","GIT"],"projects":[{"client":"Bharti Airtel, Africa","teamSize":"5","role":"Developer and Tester","description":"Worked on a client project involving report mapping and report generation using Crystal Reports, with end-to-end testing based on customized use cases.","responsibilities":["Worked on report mapping and report generation using Crystal Reports.","Designed and executed test cases for customized client requirements.","Performed end-to-end application testing and validation."]}],"experience":[{"company":"Accenture","position":"ServiceNow Developer","duration":"2023 - Present","highlights":["Configured and customized ITSM, HRSD, and ITBM modules to improve workflow efficiency by 40%.","Developed business rules, client scripts, and UI policies to enhance performance."]}]}`;
+{"name":"Amit Dave","jobTitle":"Senior Project Lead","experienceSummary":"3+ years of Industry Experience","specialization":"ServiceNow ITSM","overview":"ServiceNow professional with 3+ years of experience specializing in ITSM. Skilled in development, configuration and customization of ServiceNow modules. Experienced in workflow automation and cross-functional collaboration.","education":[{"year":"2008","qualification":"Bachelor of Engineering (IT), RGPV Bhopal"}],"skills":["JavaScript","WordPress","MySQL","ReactJS","Team Management"],"tools":["JIRA","SVN","GIT"],"certifications":["ServiceNow CSA"],"projects":[{"client":"Bharti Airtel, Africa","teamSize":"5","role":"Developer and Tester","description":"Worked on a client project involving report mapping and report generation using Crystal Reports, with end-to-end testing based on customized use cases.","responsibilities":["Worked on report mapping and report generation using Crystal Reports.","Designed and executed test cases for customized client requirements.","Performed end-to-end application testing and validation."]}],"experience":[{"company":"Accenture","position":"ServiceNow Developer","duration":"2023 - Present","highlights":["Configured and customized ITSM, HRSD, and ITBM modules to improve workflow efficiency by 40%.","Developed business rules, client scripts, and UI policies to enhance performance."]}]}`;
 
 const INTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
 {
@@ -50,7 +52,7 @@ const INTERNAL_SCHEMA = `JSON SCHEMA (field -> description):
   "experienceSummary": string,     // One line of total experience, e.g. "3+ years of Industry Experience"
   "specialization": string,        // Primary specialization line, e.g. "ServiceNow ITSM"
   "overview": string,              // 3-5 sentence professional summary paragraph
-  "education": [                   // One entry per degree/training, most recent first
+  "education": [                   // EXACTLY ONE entry: the highest qualification only
     { "year": string,              // Completion year, e.g. "2008"
       "qualification": string }    // Degree + institution, e.g. "Bachelor of Engineering (IT), RGPV Bhopal"
   ],

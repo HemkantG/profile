@@ -324,8 +324,11 @@ function renderExternal(doc: Doc, fonts: Fonts, logo: PDFImage, d: ExternalResum
   sectionHeading(flow, fonts, "Skills");
   ebody(d.skills.join(", "));
 
-  sectionHeading(flow, fonts, "Tools/Certifications");
-  ebody(d.toolsAndCertifications.join(", "));
+  sectionHeading(flow, fonts, "Tools");
+  ebody(d.tools.join(", "));
+
+  sectionHeading(flow, fonts, "Certifications");
+  ebody(d.certifications.join(", "));
 
   sectionHeading(flow, fonts, "Projects/Experience");
   d.projects.forEach((p, i) => {

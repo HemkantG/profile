@@ -1,17 +1,19 @@
 "use client";
 
-const STEPS = ["Template", "Provide data", "Review & Generate"];
+const DEFAULT_STEPS = ["Template", "Provide data", "Review & Generate"];
 
 export default function Stepper({
   current,
   onNavigate,
+  labels = DEFAULT_STEPS,
 }: {
   current: number;
   onNavigate: (step: number) => void;
+  labels?: string[];
 }) {
   return (
     <ol className="flex items-center justify-center gap-2 sm:gap-4">
-      {STEPS.map((label, i) => {
+      {labels.map((label, i) => {
         const done = i < current;
         const active = i === current;
         return (
