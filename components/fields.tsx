@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { isNAValue } from "@/lib/schemas";
 
 export function Section({
   title,
@@ -48,6 +49,7 @@ export function Field({
   /** When true, shows a ✕ to clear the value so this field is left out of the final document. */
   optional?: boolean;
 }) {
+  const showNAHint = optional && isNAValue(value);
   return (
     <label className="block">
       <span className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-600">
@@ -59,9 +61,9 @@ export function Field({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`w-full rounded-md border border-gray-300 py-2 pl-3 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
+          className={`w-full rounded-md border py-2 pl-3 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
             optional ? "pr-8" : "pr-3"
-          }`}
+          } ${showNAHint ? "border-amber-400" : "border-gray-300"}`}
         />
         {optional && value.trim() !== "" && (
           <button
@@ -74,6 +76,12 @@ export function Field({
           </button>
         )}
       </div>
+      {showNAHint && (
+        <p className="mt-1 text-xs text-amber-600">
+          Not found in the resume — it will be left out of the final document automatically. Add the real value here
+          if you have it.
+        </p>
+      )}
     </label>
   );
 }

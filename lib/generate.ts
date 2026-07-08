@@ -1,7 +1,11 @@
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import { saveAs } from "file-saver";
-import type { ExternalResume, InternalResume, ResumeData, TemplateId } from "./schemas";
+import { isNAValue, type ExternalResume, type InternalResume, type ResumeData, type TemplateId } from "./schemas";
+
+/** An optional field is only worth showing if it has real content — blank AND
+ *  "N/A"-style placeholders both count as "not provided". */
+const hasRealValue = (value: string) => !!value.trim() && !isNAValue(value);
 
 /** Map the validated form data onto the tag names used inside the .docx templates
  *  (arrays of strings become comma-joined text where the template shows inline lists,
@@ -14,9 +18,14 @@ function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> 
       skills: d.skills.join(", "),
       tools: d.tools.join(", "),
       certifications: d.certifications.join(", "),
-      // hasYear/hasTeamSize let the template drop a cleared (empty) field entirely.
-      education: d.education.map((e) => ({ ...e, hasYear: !!e.year.trim() })),
-      projects: d.projects.map((p, i) => ({ ...p, number: i + 1, hasTeamSize: !!p.teamSize.trim() })),
+      // hasYear/hasTeamSize let the template drop a cleared or "N/A" field entirely.
+      education: d.education.map((e) => ({ ...e, year: hasRealValue(e.year) ? e.year : "", hasYear: hasRealValue(e.year) })),
+      projects: d.projects.map((p, i) => ({
+        ...p,
+        number: i + 1,
+        teamSize: hasRealValue(p.teamSize) ? p.teamSize : "",
+        hasTeamSize: hasRealValue(p.teamSize),
+      })),
     };
   }
   const d = data as InternalResume;
@@ -29,8 +38,11 @@ function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> 
       ...p,
       number: i + 1,
       toolsAndTechnologies: p.toolsAndTechnologies.join(", "),
-      // hasTeamSize/hasDuration let the template drop a cleared (empty) field entirely.
-      hasTeamSize: !!p.teamSize.trim(),
+      // hasTeamSize/hasProjectLink/hasDuration let the template drop a cleared or "N/A" field entirely.
+      teamSize: hasRealValue(p.teamSize) ? p.teamSize : "",
+      hasTeamSize: hasRealValue(p.teamSize),
+      projectLink: hasRealValue(p.projectLink) ? p.projectLink : "",
+      hasProjectLink: hasRealValue(p.projectLink),
       hasDuration: !!p.duration.trim(),
     })),
   };

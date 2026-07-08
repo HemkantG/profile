@@ -91,11 +91,16 @@ export default function InternalForm({
               >
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Title" value={p.title} onChange={(v) => setP({ title: v })} />
-                  <Field label="Duration" optional value={p.duration} onChange={(v) => setP({ duration: v })} />
+                  <Field label="Duration" value={p.duration} onChange={(v) => setP({ duration: v })} />
                   <Field label="Team size" optional value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
                   <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
                 </div>
-                <Field label="Project link (URL or NDA)" value={p.projectLink} onChange={(v) => setP({ projectLink: v })} />
+                <Field
+                  label="Project link (URL or NDA)"
+                  optional
+                  value={p.projectLink}
+                  onChange={(v) => setP({ projectLink: v })}
+                />
                 <StringListEditor
                   label="Tools & technologies"
                   items={p.toolsAndTechnologies}

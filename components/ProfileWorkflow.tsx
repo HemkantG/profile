@@ -6,8 +6,11 @@ import ExternalForm from "@/components/ExternalForm";
 import InternalForm from "@/components/InternalForm";
 import { promptFor } from "@/lib/prompts";
 import { generateDocx } from "@/lib/generate";
+import { INTERNAL_FORM_URL } from "@/lib/constants";
 import {
   blankResume,
+  describeFieldPath,
+  findNAIssues,
   schemaFor,
   type ExternalResume,
   type InternalResume,
@@ -72,7 +75,17 @@ const START: Record<
   },
 };
 
-const STEP_LABELS = ["Start", "Provide data", "Review & Generate"];
+const HERO_SUBTEXT: Record<TemplateId, string> = {
+  external:
+    "Generate a professionally formatted candidate profile in the standard InfoBeans format, ready for client submissions.",
+  internal:
+    "Your profile is a key branding tool that enables us to showcase your expertise to prospective clients and identify opportunities for role enrichment within the organization.",
+};
+
+const STEP_LABELS: Record<TemplateId, string[]> = {
+  external: ["Start", "Provide data", "Review & Generate"],
+  internal: ["Start", "Provide data", "Review & Generate", "Submit"],
+};
 
 export default function ProfileWorkflow({ audience }: { audience: Audience }) {
   const templateId = audience; // the route fixes the template
@@ -107,7 +120,7 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
     if (!result.success) {
       setErrors(
         result.error.issues.map((issue) => ({
-          path: issue.path.length ? issue.path.join(".") : "(root)",
+          path: issue.path.length ? describeFieldPath(issue.path as (string | number)[]) : "(root)",
           message: issue.message,
         })),
       );
@@ -136,12 +149,38 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
 
   const handleGenerate = async () => {
     if (!data) return;
+
+    // Re-validate right before generating — covers both the pasted-JSON path and the
+    // blank-form path (never validated until now), plus any edits made in the review step
+    // since. The "N/A" check only runs here (not on the JSON "Continue" step) so the user
+    // can still reach the editable form to fix values the LLM couldn't extract.
+    const result = schemaFor(templateId).safeParse(data);
+    if (!result.success) {
+      setErrors(
+        result.error.issues.map((issue) => ({
+          path: issue.path.length ? describeFieldPath(issue.path as (string | number)[]) : "(root)",
+          message: issue.message,
+        })),
+      );
+      setGenerateError(null);
+      setGenerated(null);
+      return;
+    }
+    const naIssues = findNAIssues(templateId, result.data);
+    if (naIssues.length > 0) {
+      setErrors(naIssues);
+      setGenerateError(null);
+      setGenerated(null);
+      return;
+    }
+    setErrors(null);
+
     setGenerating(true);
     setGenerateError(null);
     setGenerated(null);
     try {
       const candidate = (data as { name?: string }).name?.trim().replace(/\s+/g, "_") || "resume";
-      await generateDocx(templateId, data, `${candidate}_${templateId}_profile.docx`);
+      await generateDocx(templateId, result.data, `${candidate}_${templateId}_profile.docx`);
       setGenerated("DOCX downloaded — check your downloads.");
     } catch (e) {
       setGenerateError(e instanceof Error ? e.message : String(e));
@@ -154,24 +193,22 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
     setStep(target);
     setGenerateError(null);
     setGenerated(null);
+    setErrors(null);
   };
 
   return (
     <div className="w-full text-ink">
-      {/* hero — identical for both routes */}
-      <section className="border-b border-hairline bg-cream">
+      {/* hero — same heading for both routes, subtext is per-audience */}
+      <section className="bg-cream">
         <div className="mx-auto max-w-3xl px-4 py-12 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-ink-dark sm:text-4xl">InfoBeans Profile Generator</h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-ink-light sm:text-base">
-            Your profile is a key branding tool that enables us to showcase your expertise to prospective clients and
-            identify opportunities for role enrichment within the organization.
-          </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-ink-light sm:text-base">{HERO_SUBTEXT[templateId]}</p>
         </div>
       </section>
 
       <main className="mx-auto max-w-3xl px-4 py-10">
         <div className="mb-10">
-          <Stepper current={step} onNavigate={goTo} labels={STEP_LABELS} />
+          <Stepper current={step} onNavigate={goTo} labels={STEP_LABELS[templateId]} />
         </div>
 
         {/* ---------- STEP 0: start experience ---------- */}
@@ -302,11 +339,37 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
         {step === 2 && data && (
           <div className="animate-fade-up space-y-5">
             {templateId === "external" ? (
-              <ExternalForm data={data as ExternalResume} onChange={(d) => setData(d)} />
+              <ExternalForm
+                data={data as ExternalResume}
+                onChange={(d) => {
+                  setData(d);
+                  if (errors) setErrors(null);
+                }}
+              />
             ) : (
-              <InternalForm data={data as InternalResume} onChange={(d) => setData(d)} />
+              <InternalForm
+                data={data as InternalResume}
+                onChange={(d) => {
+                  setData(d);
+                  if (errors) setErrors(null);
+                }}
+              />
             )}
 
+            {errors && (
+              <div className="rounded-md border border-brand-200 bg-brand-50 p-3">
+                <p className="mb-2 text-sm font-semibold text-brand-700">
+                  Can&apos;t generate yet — {errors.length} {errors.length === 1 ? "issue" : "issues"} to fix:
+                </p>
+                <ul className="space-y-1 text-sm text-brand-700">
+                  {errors.map((err, i) => (
+                    <li key={i}>
+                      <code className="rounded bg-brand-100 px-1 py-0.5 text-xs">{err.path}</code> — {err.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {generateError && (
               <div className="whitespace-pre-wrap rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {generateError}
@@ -324,15 +387,54 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
               >
                 ← Back
               </button>
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={generating}
-                className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50"
-              >
-                {generating ? "Generating…" : "DOCX ↓"}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={generating}
+                  className="rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:opacity-50"
+                >
+                  {generating ? "Generating…" : "DOCX ↓"}
+                </button>
+                {templateId === "internal" && generated && !generateError && (
+                  <button
+                    type="button"
+                    onClick={() => goTo(3)}
+                    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-ink hover:bg-gray-50"
+                  >
+                    Continue to Submit →
+                  </button>
+                )}
+              </div>
             </div>
+          </div>
+        )}
+
+        {/* ---------- STEP 3: submit (internal only) ---------- */}
+        {step === 3 && templateId === "internal" && (
+          <div className="animate-fade-up space-y-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <h2 className="mb-2 font-semibold text-ink-dark">Submit your profile</h2>
+              <p className="mb-4 text-sm text-ink-light">
+                Once you&apos;ve downloaded your profile, upload the generated DOCX file through the Google Form
+                below to complete your profile submission.
+              </p>
+              <a
+                href={INTERNAL_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600"
+              >
+                Open submission form →
+              </a>
+            </div>
+            <button
+              type="button"
+              onClick={() => goTo(2)}
+              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-ink hover:bg-gray-50"
+            >
+              ← Back
+            </button>
           </div>
         )}
       </main>

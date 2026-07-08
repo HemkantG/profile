@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { INTERNAL_FORM_URL } from "@/lib/constants";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -11,10 +12,12 @@ export default function SiteNav() {
   // Resolve the "home" for whichever route is currently browsing. Each route only
   // links to its own flow; the other is reachable only by knowing its URL.
   const home = pathname.startsWith("/external") ? "/external" : "/internal";
-  const LINKS = [
+  const LINKS: { href: string; label: string; external?: boolean }[] = [
     { href: home, label: "Generator" },
     { href: `${home}/instructions`, label: "Instructions" },
     { href: "/style-guide", label: "Style Guide" },
+    // The submission form only applies to the internal profile workflow.
+    ...(home === "/internal" ? [{ href: INTERNAL_FORM_URL, label: "Submit Profile", external: true }] : []),
   ];
 
   return (
@@ -26,6 +29,19 @@ export default function SiteNav() {
         </Link>
         <div className="flex items-center gap-1">
           {LINKS.map((link) => {
+            if (link.external) {
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative rounded-md px-3 py-1.5 text-sm font-medium text-ink-light transition-colors hover:text-ink"
+                >
+                  {link.label}
+                </a>
+              );
+            }
             const active = pathname === link.href;
             return (
               <Link
