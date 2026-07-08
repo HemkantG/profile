@@ -5,6 +5,6 @@ export const metadata: Metadata = {
   title: "Instructions — Profile Generator",
 };
 
-export default function HrInstructionsPage() {
-  return <InstructionsContent audience="hr" />;
+export default function InternalInstructionsPage() {
+  return <InstructionsContent audience="internal" />;
 }

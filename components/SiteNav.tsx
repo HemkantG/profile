@@ -8,9 +8,9 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 export default function SiteNav() {
   const pathname = usePathname();
 
-  // Resolve the "home" for whichever audience is currently browsing. Employees
-  // never get a link to the HR flow — it's only reachable by knowing the /hr URL.
-  const home = pathname.startsWith("/hr") ? "/hr" : "/employee";
+  // Resolve the "home" for whichever route is currently browsing. Each route only
+  // links to its own flow; the other is reachable only by knowing its URL.
+  const home = pathname.startsWith("/external") ? "/external" : "/internal";
   const LINKS = [
     { href: home, label: "Generator" },
     { href: `${home}/instructions`, label: "Instructions" },

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Bare domain lands on the least-privileged flow; HR uses the separate /hr URL.
+// Bare domain lands on the internal flow; the external flow lives at /external.
 export default function Home() {
-  redirect("/employee");
+  redirect("/internal");
 }

@@ -26,7 +26,8 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function InstructionsContent({ audience }: { audience: Audience }) {
-  const showExternal = audience === "hr";
+  const showExternal = audience === "external";
+  const showInternal = audience === "internal";
 
   return (
     <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
@@ -39,7 +40,7 @@ export default function InstructionsContent({ audience }: { audience: Audience }
           </p>
           <ol className="space-y-4">
             <Step n={1} title="Choose How to Get Started">
-              On the <Link href="/hr" className="text-brand-600 underline">Generator</Link> page, choose one of the
+              On the <Link href="/external" className="text-brand-600 underline">Generator</Link> page, choose one of the
               following options:
               <ul className="mt-1 list-disc space-y-1 pl-5">
                 <li>
@@ -110,6 +111,7 @@ export default function InstructionsContent({ audience }: { audience: Audience }
         </Card>
       )}
 
+      {showInternal && (
       <Card title="Internal Profile">
         <p className="mb-4 text-sm text-gray-600">
           Generate or update your InfoBeans Internal Profile in the standard format using your existing profile or a
@@ -118,7 +120,7 @@ export default function InstructionsContent({ audience }: { audience: Audience }
         </p>
         <ol className="space-y-4">
           <Step n={1} title="Choose how to get started">
-            On the <Link href="/employee" className="text-brand-600 underline">Generator</Link> page, choose one of
+            On the <Link href="/internal" className="text-brand-600 underline">Generator</Link> page, choose one of
             the following options:
             <ul className="mt-1 list-disc space-y-1 pl-5">
               <li>
@@ -209,6 +211,7 @@ export default function InstructionsContent({ audience }: { audience: Audience }
           </Step>
         </ol>
       </Card>
+      )}
 
       <Card title="Tips & troubleshooting">
         <ul className="list-disc space-y-2 pl-5 text-sm text-gray-600">
