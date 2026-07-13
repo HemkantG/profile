@@ -7,7 +7,13 @@
  */
 import { PDFDocument, PDFFont, PDFImage, PDFPage, rgb, type RGB } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+import { isNAValue } from "./schemas";
 import type { ExternalResume, InternalResume, ResumeData, TemplateId } from "./schemas";
+
+/** An optional field is only worth showing if it has real content — blank AND
+ *  "N/A"-style placeholders both count as "not provided". Mirrors hasRealValue in
+ *  generate.ts so the PDF drops the same title+value blocks the DOCX does. */
+const hasRealValue = (value: string) => !!value.trim() && !isNAValue(value);
 
 export interface PdfAssets {
   lexendLight: Uint8Array;
@@ -333,10 +339,12 @@ function renderExternal(doc: Doc, fonts: Fonts, logo: PDFImage, d: ExternalResum
   sectionHeading(flow, fonts, "Projects/Experience");
   d.projects.forEach((p, i) => {
     if (i > 0) flow.gap(10);
-    label(flow, fonts, `Project ${i + 1}`);
+    label(flow, fonts, `Project ${i + 1} - ${p.duration}`);
     ebody(p.client);
-    label(flow, fonts, "Team Size");
-    ebody(p.teamSize);
+    if (hasRealValue(p.teamSize)) {
+      label(flow, fonts, "Team Size");
+      ebody(p.teamSize);
+    }
     label(flow, fonts, "Role");
     ebody(p.role);
     flow.gap(7);
@@ -387,12 +395,16 @@ function renderInternal(doc: Doc, fonts: Fonts, logo: PDFImage, d: InternalResum
       body(left, fonts, p.title);
       label(left, fonts, "Tools & Technologies");
       body(left, fonts, p.toolsAndTechnologies.join(", "));
-      label(left, fonts, "Team Size");
-      body(left, fonts, p.teamSize);
+      if (hasRealValue(p.teamSize)) {
+        label(left, fonts, "Team Size");
+        body(left, fonts, p.teamSize);
+      }
       label(left, fonts, "Role");
       body(left, fonts, p.role);
-      label(left, fonts, "Project Link");
-      body(left, fonts, p.projectLink);
+      if (hasRealValue(p.projectLink)) {
+        label(left, fonts, "Project Link");
+        body(left, fonts, p.projectLink);
+      }
       left.gap(7);
       body(left, fonts, p.description, true);
       left.gap(7);

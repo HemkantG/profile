@@ -22,7 +22,7 @@ export default function SiteNav() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href={home} className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`${BASE}/img/logo.png`} alt="InfoBeans" width={240} height={76} className="h-[26px] w-auto sm:h-9" />

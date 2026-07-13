@@ -48,7 +48,7 @@ const SOCIALS = [
 
 export default function Footer() {
   return (
-    <footer className="mx-auto w-full max-w-5xl px-4 text-xs text-ink-light">
+    <footer className="mx-auto w-full max-w-6xl px-4 text-xs text-ink-light">
       <div className="flex flex-col items-center gap-5 border-t border-hairline py-6 sm:flex-row sm:justify-between">
         <div className="text-xl font-bold leading-tight text-ink">
           Let&apos;s <span className="text-brand-500">Create WOW</span> together!

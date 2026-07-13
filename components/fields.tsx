@@ -42,14 +42,33 @@ export function Field({
   value,
   onChange,
   optional = false,
+  numeric = false,
+  maxWords,
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   /** When true, shows a ✕ to clear the value so this field is left out of the final document. */
   optional?: boolean;
+  /** Restrict input to digits — non-digit characters are stripped as the user types. */
+  numeric?: boolean;
+  /** Cap the input at this many space-separated words (extra words are dropped as you type). */
+  maxWords?: number;
+  /** Helper text shown under the input (e.g. a live preview of the formatted value). */
+  hint?: ReactNode;
 }) {
   const showNAHint = optional && isNAValue(value);
+  const handleChange = (raw: string) => {
+    let v = numeric ? raw.replace(/[^0-9]/g, "") : raw;
+    if (maxWords) {
+      const words = v.split(/\s+/);
+      // keep the raw text (incl. a trailing space being typed) until it exceeds the cap,
+      // then snap back to just the first `maxWords` words.
+      if (words.filter(Boolean).length > maxWords) v = words.filter(Boolean).slice(0, maxWords).join(" ");
+    }
+    onChange(v);
+  };
   return (
     <label className="block">
       <span className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-600">
@@ -59,8 +78,9 @@ export function Field({
       <div className="relative">
         <input
           type="text"
+          inputMode={numeric ? "numeric" : undefined}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           className={`w-full rounded-md border py-2 pl-3 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
             optional ? "pr-8" : "pr-3"
           } ${showNAHint ? "border-amber-400" : "border-gray-300"}`}
@@ -76,6 +96,7 @@ export function Field({
           </button>
         )}
       </div>
+      {hint && !showNAHint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
       {showNAHint && (
         <p className="mt-1 text-xs text-amber-600">
           Not found in the resume — it will be left out of the final document automatically. Add the real value here

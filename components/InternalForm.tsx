@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { InternalResume } from "@/lib/schemas";
+import { formatYearsExperience, wordCount, type InternalResume } from "@/lib/schemas";
 import { AddButton, AreaField, Field, ItemCard, Section, StringListEditor, moveItem } from "./fields";
 
 function RemovedSection({ title, onRestore }: { title: string; onRestore: () => void }) {
@@ -29,9 +29,13 @@ const BLANK_PROJECT: InternalResume["projects"][number] = {
 export default function InternalForm({
   data,
   onChange,
+  fromScratch = false,
 }: {
   data: InternalResume;
   onChange: (data: InternalResume) => void;
+  /** The blank-form ("Create a Profile from Scratch") route captures the experience
+   *  summary as a plain number of years; the LLM route supplies the full string. */
+  fromScratch?: boolean;
 }) {
   const [projectsRemoved, setProjectsRemoved] = useState(false);
   const [managerialRemoved, setManagerialRemoved] = useState(false);
@@ -50,8 +54,28 @@ export default function InternalForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Name" value={data.name} onChange={(v) => set("name", v)} />
           <Field label="Job title" value={data.jobTitle} onChange={(v) => set("jobTitle", v)} />
-          <Field label="Experience summary" value={data.experienceSummary} onChange={(v) => set("experienceSummary", v)} />
-          <Field label="Specialization" value={data.specialization} onChange={(v) => set("specialization", v)} />
+          {fromScratch ? (
+            <Field
+              label="Years of Industry Experience"
+              numeric
+              value={data.experienceSummary}
+              onChange={(v) => set("experienceSummary", v)}
+              hint={
+                data.experienceSummary.trim()
+                  ? `Shows as "${formatYearsExperience(data.experienceSummary)}" in the profile.`
+                  : "Numbers only — e.g. 4 becomes “4+ Years of Industry Experience”."
+              }
+            />
+          ) : (
+            <Field label="Experience summary" value={data.experienceSummary} onChange={(v) => set("experienceSummary", v)} />
+          )}
+          <Field
+            label="Specialization"
+            value={data.specialization}
+            onChange={(v) => set("specialization", v)}
+            maxWords={5}
+            hint={`Max 5 words · ${wordCount(data.specialization)} used`}
+          />
         </div>
         <AreaField label="Overview" value={data.overview} onChange={(v) => set("overview", v)} />
       </Section>
@@ -90,7 +114,7 @@ export default function InternalForm({
                 onRemove={(idx) => set("projects", data.projects.filter((_, j) => j !== idx))}
               >
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Title" value={p.title} onChange={(v) => setP({ title: v })} />
+                  <Field label="Project Name" value={p.title} onChange={(v) => setP({ title: v })} />
                   <Field label="Duration" value={p.duration} onChange={(v) => setP({ duration: v })} />
                   <Field label="Team size" optional value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
                   <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
@@ -107,7 +131,7 @@ export default function InternalForm({
                   onChange={(v) => setP({ toolsAndTechnologies: v })}
                   addLabel="Add tool"
                 />
-                <AreaField label="Description" value={p.description} onChange={(v) => setP({ description: v })} />
+                <AreaField label="Project Description" value={p.description} onChange={(v) => setP({ description: v })} />
                 <StringListEditor
                   label="Responsibilities (bullets)"
                   items={p.responsibilities}

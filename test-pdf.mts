@@ -22,6 +22,7 @@ const external: ExternalResume = {
   certifications: ["ServiceNow CSA"],
   projects: [
     {
+      duration: "Jan 2021 - Dec 2021",
       client: "Bharti Airtel, Africa",
       teamSize: "5",
       role: "Developer and Tester",
@@ -36,6 +37,7 @@ const external: ExternalResume = {
       ],
     },
     {
+      duration: "Feb 2022 - Present",
       client: "Globex Retail, EU",
       teamSize: "8",
       role: "Senior Developer",

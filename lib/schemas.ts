@@ -4,10 +4,28 @@ import { z } from "zod";
 const NA_PATTERN = /^n\/?a$/i;
 export const isNAValue = (value: string) => NA_PATTERN.test(value.trim());
 
+/** In the "Create a Profile from Scratch" route the experience summary is captured as a
+ *  plain number of years; the profile then shows it as "<N>+ Years of Industry Experience".
+ *  The LLM route already supplies the full formatted string, so it skips this. */
+export const formatYearsExperience = (years: string): string => {
+  const n = years.trim();
+  return n ? `${n}+ Years of Industry Experience` : "";
+};
+
 // Structural check only (required-and-non-empty) — used while pasting/editing JSON, so
 // the user can still reach the editable form to fix "N/A" placeholders. The "N/A" check
 // itself runs separately, only right before DOCX generation (see findNAIssues below).
 const nonEmpty = (label: string) => z.string().trim().min(1, `${label} is required`);
+
+/** Counts space-separated words in a string (empty string => 0). */
+export const wordCount = (value: string): number => {
+  const trimmed = value.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+};
+
+/** A required text field capped at `max` words (e.g. specialization: "MAX 5 WORDS"). */
+const maxWords = (label: string, max: number) =>
+  nonEmpty(label).refine((v) => wordCount(v) <= max, `${label} must be at most ${max} words`);
 
 /** A field that's optional in the UI: blank is fine, and "N/A" is left as-is (the UI hints the user to fill it in or clear it). */
 const looseText = () => z.string();
@@ -17,14 +35,10 @@ export const educationEntrySchema = z.object({
   qualification: nonEmpty("qualification"),
 });
 
-const externalEducationEntrySchema = z.object({
-  year: looseText(),
-  qualification: nonEmpty("qualification"),
-});
-
 /* ---------- External template ---------- */
 
 export const externalProjectSchema = z.object({
+  duration: nonEmpty("duration"),
   client: nonEmpty("client"),
   teamSize: looseText(),
   role: nonEmpty("role"),
@@ -43,10 +57,10 @@ export const externalResumeSchema = z.object({
   name: nonEmpty("name"),
   jobTitle: nonEmpty("jobTitle"),
   experienceSummary: nonEmpty("experienceSummary"),
-  specialization: nonEmpty("specialization"),
+  specialization: maxWords("specialization", 5),
   overview: nonEmpty("overview"),
   education: z
-    .array(externalEducationEntrySchema)
+    .array(educationEntrySchema)
     .length(1, "exactly one education entry — the highest qualification only"),
   skills: z.array(nonEmpty("skill")).min(1, "at least one skill"),
   tools: z.array(nonEmpty("tool")).min(1, "at least one tool"),
@@ -79,7 +93,7 @@ export const internalResumeSchema = z.object({
   name: nonEmpty("name"),
   jobTitle: nonEmpty("jobTitle"),
   experienceSummary: nonEmpty("experienceSummary"),
-  specialization: nonEmpty("specialization"),
+  specialization: maxWords("specialization", 5),
   overview: nonEmpty("overview"),
   education: z
     .array(educationEntrySchema)
@@ -167,11 +181,9 @@ export function describeFieldPath(path: (string | number)[]): string {
 
 /** Field names that are optional in the UI, so a leftover "N/A" there is fine
  *  (the field is simply left out of the final document if not filled in). */
-const isOptionalNAPath = (templateId: TemplateId, path: (string | number)[]): boolean => {
+const isOptionalNAPath = (path: (string | number)[]): boolean => {
   const key = path[path.length - 1];
-  if (key === "teamSize" || key === "projectLink") return true;
-  if (templateId === "external" && key === "year" && path[path.length - 3] === "education") return true;
-  return false;
+  return key === "teamSize" || key === "projectLink";
 };
 
 /** Scans a resume for mandatory fields the LLM left as "N/A" (or the user typed by hand).
@@ -181,7 +193,7 @@ export function findNAIssues(templateId: TemplateId, data: ResumeData): NAIssue[
   const issues: NAIssue[] = [];
   const walk = (value: unknown, path: (string | number)[]) => {
     if (typeof value === "string") {
-      if (isNAValue(value) && !isOptionalNAPath(templateId, path)) {
+      if (isNAValue(value) && !isOptionalNAPath(path)) {
         issues.push({
           path: describeFieldPath(path),
           message: 'Still shows the placeholder "N/A" — please replace it with the real value before generating.',
@@ -215,7 +227,7 @@ export function blankResume(id: TemplateId): ResumeData {
       skills: [""],
       tools: [""],
       certifications: [""],
-      projects: [{ client: "", teamSize: "", role: "", description: "", responsibilities: [""] }],
+      projects: [{ duration: "", client: "", teamSize: "", role: "", description: "", responsibilities: [""] }],
       experience: [{ company: "", position: "", duration: "", highlights: [""] }],
     };
   }

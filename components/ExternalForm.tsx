@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ExternalResume } from "@/lib/schemas";
+import { wordCount, type ExternalResume } from "@/lib/schemas";
 import { AddButton, AreaField, Field, ItemCard, Section, StringListEditor, moveItem } from "./fields";
 
 function RemovedSection({ title, onRestore }: { title: string; onRestore: () => void }) {
@@ -23,7 +23,7 @@ function RemovedSection({ title, onRestore }: { title: string; onRestore: () => 
 }
 
 const BLANK_PROJECT: ExternalResume["projects"][number] = {
-  client: "", teamSize: "", role: "", description: "", responsibilities: [""],
+  duration: "", client: "", teamSize: "", role: "", description: "", responsibilities: [""],
 };
 
 export default function ExternalForm({
@@ -48,7 +48,13 @@ export default function ExternalForm({
           <Field label="Name" value={data.name} onChange={(v) => set("name", v)} />
           <Field label="Job title" value={data.jobTitle} onChange={(v) => set("jobTitle", v)} />
           <Field label="Experience summary" value={data.experienceSummary} onChange={(v) => set("experienceSummary", v)} />
-          <Field label="Specialization" value={data.specialization} onChange={(v) => set("specialization", v)} />
+          <Field
+            label="Specialization"
+            value={data.specialization}
+            onChange={(v) => set("specialization", v)}
+            maxWords={5}
+            hint={`Max 5 words · ${wordCount(data.specialization)} used`}
+          />
         </div>
         <AreaField label="Overview" value={data.overview} onChange={(v) => set("overview", v)} />
       </Section>
@@ -56,7 +62,7 @@ export default function ExternalForm({
       <Section title="Education & Training">
         <p className="text-xs text-ink-light">Highest qualification only — the profile carries a single education entry.</p>
         <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
-          <Field label="Year" optional value={data.education[0].year} onChange={(v) => set("education", [{ ...data.education[0], year: v }])} />
+          <Field label="Year" value={data.education[0].year} onChange={(v) => set("education", [{ ...data.education[0], year: v }])} />
           <Field label="Qualification" value={data.education[0].qualification} onChange={(v) => set("education", [{ ...data.education[0], qualification: v }])} />
         </div>
       </Section>
@@ -99,11 +105,12 @@ export default function ExternalForm({
                 onRemove={(idx) => set("projects", data.projects.filter((_, j) => j !== idx))}
               >
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Client" value={p.client} onChange={(v) => setP({ client: v })} />
+                  <Field label="Project Name" value={p.client} onChange={(v) => setP({ client: v })} />
+                  <Field label="Duration" value={p.duration} onChange={(v) => setP({ duration: v })} />
                   <Field label="Team size" optional value={p.teamSize} onChange={(v) => setP({ teamSize: v })} />
                 </div>
                 <Field label="Role" value={p.role} onChange={(v) => setP({ role: v })} />
-                <AreaField label="Description" value={p.description} onChange={(v) => setP({ description: v })} />
+                <AreaField label="Project Description" value={p.description} onChange={(v) => setP({ description: v })} />
                 <StringListEditor
                   label="Responsibilities (bullets)"
                   items={p.responsibilities}
@@ -139,15 +146,15 @@ export default function ExternalForm({
               onRemove={(idx) => set("experience", data.experience.filter((_, j) => j !== idx))}
             >
               <div className="grid gap-3 sm:grid-cols-3">
-                <Field label="Company" value={e.company} onChange={(v) => setE({ company: v })} />
-                <Field label="Position" value={e.position} onChange={(v) => setE({ position: v })} />
+                <Field label="Company Name" value={e.company} onChange={(v) => setE({ company: v })} />
+                <Field label="Role" value={e.position} onChange={(v) => setE({ position: v })} />
                 <Field label="Duration" value={e.duration} onChange={(v) => setE({ duration: v })} />
               </div>
               <StringListEditor
-                label="Highlights (bullets)"
+                label="Responsibilities (bullets)"
                 items={e.highlights}
                 onChange={(v) => setE({ highlights: v })}
-                addLabel="Add highlight"
+                addLabel="Add responsibility"
                 multiline
               />
             </ItemCard>

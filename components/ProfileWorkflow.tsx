@@ -11,6 +11,7 @@ import {
   blankResume,
   describeFieldPath,
   findNAIssues,
+  formatYearsExperience,
   schemaFor,
   type ExternalResume,
   type InternalResume,
@@ -98,6 +99,9 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
   const [jsonText, setJsonText] = useState("");
   const [errors, setErrors] = useState<FieldError[] | null>(null);
   const [data, setData] = useState<ResumeData | null>(null);
+  // The blank-form route captures the internal experience summary as a bare number of years;
+  // the LLM/JSON route supplies the full "<N>+ Years of Industry Experience" string.
+  const [fromScratch, setFromScratch] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [generated, setGenerated] = useState<string | null>(null);
@@ -137,11 +141,15 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
   };
 
   const continueToReview = () => {
-    if (validateJson(jsonText)) setStep(2);
+    if (validateJson(jsonText)) {
+      setFromScratch(false); // JSON already carries the full experience-summary string
+      setStep(2);
+    }
   };
 
   const startBlankForm = () => {
     setData(blankResume(templateId));
+    setFromScratch(true);
     setErrors(null);
     setJsonText("");
     goTo(2);
@@ -150,11 +158,19 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
   const handleGenerate = async () => {
     if (!data) return;
 
+    // In the internal blank-form route the experience summary is captured as a bare number
+    // of years; expand it to the full "<N>+ Years of Industry Experience" string used in the
+    // document (the LLM/JSON route already supplies that string, so it is left untouched).
+    const effective: ResumeData =
+      fromScratch && templateId === "internal"
+        ? { ...(data as InternalResume), experienceSummary: formatYearsExperience((data as InternalResume).experienceSummary) }
+        : data;
+
     // Re-validate right before generating — covers both the pasted-JSON path and the
     // blank-form path (never validated until now), plus any edits made in the review step
     // since. The "N/A" check only runs here (not on the JSON "Continue" step) so the user
     // can still reach the editable form to fix values the LLM couldn't extract.
-    const result = schemaFor(templateId).safeParse(data);
+    const result = schemaFor(templateId).safeParse(effective);
     if (!result.success) {
       setErrors(
         result.error.issues.map((issue) => ({
@@ -200,13 +216,13 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
     <div className="w-full text-ink">
       {/* hero — same heading for both routes, subtext is per-audience */}
       <section className="bg-cream">
-        <div className="mx-auto max-w-3xl px-4 py-12 text-center">
+        <div className="mx-auto max-w-6xl px-4 py-12 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-ink-dark sm:text-4xl">InfoBeans Profile Generator</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-ink-light sm:text-base">{HERO_SUBTEXT[templateId]}</p>
         </div>
       </section>
 
-      <main className="mx-auto max-w-3xl px-4 py-10">
+      <main className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-10">
           <Stepper current={step} onNavigate={goTo} labels={STEP_LABELS[templateId]} />
         </div>
@@ -349,6 +365,7 @@ export default function ProfileWorkflow({ audience }: { audience: Audience }) {
             ) : (
               <InternalForm
                 data={data as InternalResume}
+                fromScratch={fromScratch}
                 onChange={(d) => {
                   setData(d);
                   if (errors) setErrors(null);

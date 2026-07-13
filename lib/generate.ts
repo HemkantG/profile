@@ -18,8 +18,7 @@ function prepareData(id: TemplateId, data: ResumeData): Record<string, unknown> 
       skills: d.skills.join(", "),
       tools: d.tools.join(", "),
       certifications: d.certifications.join(", "),
-      // hasYear/hasTeamSize let the template drop a cleared or "N/A" field entirely.
-      education: d.education.map((e) => ({ ...e, year: hasRealValue(e.year) ? e.year : "", hasYear: hasRealValue(e.year) })),
+      // hasTeamSize lets the template drop a cleared or "N/A" team size entirely. Year is mandatory.
       projects: d.projects.map((p, i) => ({
         ...p,
         number: i + 1,
